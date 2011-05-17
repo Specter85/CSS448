@@ -1,0 +1,7 @@
+Debug/
+ipch/
+x64/
+save/
+
+*.zip
+*.sdf
