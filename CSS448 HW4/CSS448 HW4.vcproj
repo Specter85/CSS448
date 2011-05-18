@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\codefuncs.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\constant.cpp"
 				>
 			</File>
@@ -250,6 +254,10 @@
 			</File>
 			<File
 				RelativePath=".\bintree.h"
+				>
+			</File>
+			<File
+				RelativePath=".\codefuncs.h"
 				>
 			</File>
 			<File

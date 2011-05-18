@@ -54,6 +54,9 @@ public:
 	// Function for invalidating bad types.
 	void cullBadTypes(bool &clean);
 
+	// Function for getting Scope level.
+	int getScopeLevel()const;
+
 	// function for outputing the current object.
 	void printST();
 

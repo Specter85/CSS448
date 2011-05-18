@@ -11,6 +11,7 @@
 #include "pointertype.h"
 #include "settype.h"
 #include "type.h"
+#include "codefuncs.h"
 #include <list>
 #include <string>
 #include <stack>
@@ -305,6 +306,7 @@ void addVars() {
 		var->name = name;
 		var->type = tVal;
 		table.insert(var);
+		outputVar(var, table.getScopeLevel());
 	}
 }
 
@@ -396,7 +398,7 @@ Symbol *getTrue() {
 // Function for creating a bool false constant.
 Symbol *getFalse() {
 	Constant<bool> *temp = new Constant<bool>; 
-	temp->value = true;
+	temp->value = false;
     temp->type = (SimpleType*)sit.getSymbol(string("boolean"));
 	return temp;
 }

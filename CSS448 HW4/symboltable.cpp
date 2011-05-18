@@ -146,6 +146,18 @@ void SymbolTable::cullBadTypes(bool &clean) {
 }
 
 //------------------------------------------------------------------------------
+// getScopeLevel
+// Function for getting scope level.
+int SymbolTable::getScopeLevel()const {
+	if(currentScope != NULL) {
+		return currentScope->level;
+	}
+	else {
+		return 0;
+	}
+}
+
+//------------------------------------------------------------------------------
 // printST
 // Function for printing the current object.
 void SymbolTable::printST() {

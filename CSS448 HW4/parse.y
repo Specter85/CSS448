@@ -6,6 +6,7 @@
 #include <list>
 #include "yylex.h"
 #include "parsefuncs.h"
+#include "codefuncs.h"
 #include "pointertype.h"
 #include "symbol.h"
 #include "simpletype.h"
@@ -64,20 +65,25 @@ SimpleType pParam("pParam");
 
 CompilationUnit    :  ProgramModule        
                    ;
-ProgramModule      :  yprogram yident { printf(value.c_str()); printf(" ");
-					  scopeName.assign(value); } ProgramParameters
+ProgramModule      :  yprogram yident { scopeName.assign(value); } ProgramParameters
 					  { addScope(); }
-					  ysemicolon Block ydot
+					  ysemicolon 
+					  ProgBlock 
+					  ydot 
                    ;
 ProgramParameters  :  yleftparen  IdentList { addProgramVars(); } yrightparen
                    ;
-IdentList          :  yident { printf(value.c_str()); printf(" "); identStack.push(value); }
-                   |  IdentList ycomma yident { printf(value.c_str()); printf(" "); identStack.push(value); }
+IdentList          :  yident { identStack.push(value); }
+                   |  IdentList ycomma yident { identStack.push(value); }
                    ;
 
 /**************************  Declarations section ***************************/
 
-Block              :  Declarations  ybegin  StatementSequence  yend
+ProgBlock          :  Declarations  ybegin { cout << "int main() {" << endl; }
+					  StatementSequence  yend { cout << "}"; }
+                   ;
+Block              :  Declarations  ybegin 
+					  StatementSequence  yend
                    ;
 Declarations       :  ConstantDefBlock              /* you do this one */
                       TypeDefBlock
@@ -102,10 +108,10 @@ VariableDeclBlock  :  /*** empty ***/
 VariableDeclList   :  VariableDecl ysemicolon
                    |  VariableDeclList VariableDecl ysemicolon                                /* you finish it */
                    ;  
-ConstantDef        :  yident { printf(value.c_str()); 
-				      printf(" ");
-				      symbolName.assign(value); } yequal  ConstExpression
-				      { newSymbol->name = symbolName; table.insert(newSymbol);
+ConstantDef        :  yident { symbolName.assign(value); } yequal  ConstExpression
+				      { newSymbol->name = symbolName; 
+				      table.insert(newSymbol);
+				      outputConst(newSymbol, table.getScopeLevel());
 				      newSymbol = NULL; }
                    ;
 TypeDef            :  yident { printf(value.c_str()); printf(" "); symbolName.assign(value);
@@ -155,7 +161,7 @@ ConstFactor        :  yident { printf(value.c_str()); printf(" ");
                    |  yfalse { newSymbol = getFalse(); }
                    |  ynil { newSymbol = getNil(); }
                    ;
-Type               :  yident { printf(value.c_str()); printf(" "); symbolName.assign(value);
+Type               :  yident { symbolName.assign(value);
 					  Type *temp = dynamic_cast<Type*>(table.lookUp(symbolName));
 					  if(temp != NULL) {
 					     currentType = temp;
@@ -221,7 +227,7 @@ RecordType         :  yrecord {recordName.assign(symbolName); }
                    ;
 SetType            :  yset  yof  Subrange { addSetType(); }
                    ;
-PointerType        :  ycaret yident { printf(value.c_str()); printf(" "); 
+PointerType        :  ycaret yident {  
 					  makePointerType(); }
                    ;
 FieldListSequence  :  FieldList  
