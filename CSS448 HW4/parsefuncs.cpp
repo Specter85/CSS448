@@ -85,7 +85,7 @@ void addScope(bool func) {
 			// If type is not found after looking in the symbol table and sit output
 			// an error and  continue.
 			if(tVal == NULL) {
-				cout << "ERROR: function type " << value << " does not exist" << endl;
+				cout << "***ERROR: function type " << value << " does not exist" << endl;
 			}
 			// Assign the type from the sit.
 			else {
@@ -108,7 +108,7 @@ void addScope(bool func) {
 		// and continue.
 		Symbol *test = table.lookUpCS(sTemp->name);
 		if(test != NULL) {
-			cout << "ERROR: " << sTemp->name << " already in symbol table" << endl;
+			cout << "***ERROR: " << sTemp->name << " already in symbol table" << endl;
 			delete sTemp;
 			continue;
 		}
@@ -150,7 +150,7 @@ void addRecord() {
 		}
 		// If the variable is a repeat output an error and delete it.
 		else {
-			cout << "ERROR: " << tVar->name << " already in record" << endl;
+			cout << "***ERROR: " << tVar->name << " already in record" << endl;
 			delete tVar;
 		}
 	}
@@ -177,7 +177,7 @@ void processUmfPointers() {
 			// If the type does not exist output an error and contiue.
 			if(type == NULL) {
 				temp.point->valid = false;
-				cout << "ERROR: type " << temp.type << " is invalid." << endl;
+				cout << "***ERROR: type " << temp.type << " is invalid." << endl;
 				continue;
 			}
 		}
@@ -243,7 +243,7 @@ void addRecordVars() {
 		if(tVal == NULL) {
 			// If the type does not exist output an error, clear the ident
 			// stack and return.
-			cout << "ERROR: " << value << " type does not exist" << endl;
+			cout << "***ERROR: " << value << " type does not exist" << endl;
 			while(!identStack.empty()) {
 				identStack.pop();
 			}
@@ -275,7 +275,7 @@ void addVars() {
 	Type *tVal = NULL;
 	// If currentType is NULL output an error, empty identStack, and return.
 	if(currentType == NULL) {
-		cout << "ERROR: variables not added because type does not exist" << endl;
+		cout << "***ERROR: variables not added because type does not exist" << endl;
 		while(!identStack.empty()) {
 			identStack.pop();
 		}
@@ -297,7 +297,7 @@ void addVars() {
 		// without making a new variable.
 		Symbol *temp = table.lookUpCS(name);
 		if(temp != NULL) {
-			cout << "ERROR: " << name << " already in symbol table" << endl;
+			cout << "***ERROR: " << name << " already in symbol table" << endl;
 			continue;
 		}
 
@@ -323,7 +323,7 @@ void addFuncVars(bool ref) {
 		// If the type does not exist output an error, empty identStack, and
 		// return.
 		if(tVal == NULL) {
-			cout << "ERROR: " << value << " type does not exist" << endl;
+			cout << "***ERROR: " << value << " type does not exist" << endl;
 			while(!identStack.empty()) {
 				identStack.pop();
 			}
@@ -355,7 +355,7 @@ void addFuncVars(bool ref) {
 void addSetType() {
 	// If setStart or setEnd is NULL output an error, delete them, and return.
 	if(setStart == NULL || setEnd == NULL) {
-		cout << "ERROR: bad range" << endl;
+		cout << "***ERROR: bad range" << endl;
 		delete setStart;
 		delete setEnd;
 		return;

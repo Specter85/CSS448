@@ -31,7 +31,7 @@ void PointerType::display(int indent)const {
 		}
 		// Otherwise output the pointer type's name and an error.
 		else {
-			cout << name << " ^ ERROR: invalid type" << endl;
+			cout << name << " ^ ***ERROR: invalid type" << endl;
 		}
 	}
 }

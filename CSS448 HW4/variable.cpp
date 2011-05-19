@@ -43,7 +43,7 @@ void Variable::display(int indent)const {
 		}
 		// Otherwise output the variable's name and an error.
 		else {
-			cout << name << " ERROR: invalid type" << endl;
+			cout << name << " ***ERROR: invalid type" << endl;
 		}
 	}
 	// If the variable is a refrence output var.
@@ -62,7 +62,7 @@ void Variable::display(int indent)const {
 		}
 		// Otherwise output the variable's name and an error.
 		else {
-			cout << "var " << name << " ERROR: invalid type" << endl;
+			cout << "var " << name << " ***ERROR: invalid type" << endl;
 		}
 	}
 }

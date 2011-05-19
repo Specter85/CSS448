@@ -57,6 +57,6 @@ void ArrayType::display(int indent)const {
 	}
 	// Otherwise output an error.
 	else {
-		cout << "ERROR: invalid type" << endl;
+		cout << "***ERROR: invalid type" << endl;
 	}
 }

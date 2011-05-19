@@ -121,7 +121,7 @@ TypeDef            :  yident { printf(value.c_str()); printf(" "); symbolName.as
 					     table.insert(currentType);
 					  }
 					  else {
-					     cout << "ERROR: " << symbolName << " already in symbol table" << endl;
+					     cout << "***ERROR: " << symbolName << " already in symbol table" << endl;
 					     PointerType *temp = dynamic_cast<PointerType*>(currentType);
 					     if(temp != NULL) {
 						    if(!pointerStack.empty() && pointerStack.front().point == temp) {
@@ -146,7 +146,7 @@ ConstFactor        :  yident { printf(value.c_str()); printf(" ");
 					  if(tVal == NULL) {
 						  tVal = sit.getSymbol(value);
 						  if(tVal == NULL) {
-							  cout << "ERROR: Constant type " << value << " does not exist" << endl;
+							  cout << "***ERROR: Constant type " << value << " does not exist" << endl;
 						  }
 						  else {
 							  newSymbol = tVal;
@@ -172,7 +172,7 @@ Type               :  yident { symbolName.assign(value);
 					        currentType = temp;
 					     }
 					     else {
-					        cout << "ERROR: type " << symbolName << " does not exist" << endl;
+					        cout << "***ERROR: type " << symbolName << " does not exist" << endl;
 					        currentType = NULL;
 					     }
 					  } 
