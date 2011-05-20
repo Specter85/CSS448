@@ -5,11 +5,74 @@
 #include "codefuncs.h"
 #include <iostream>
 #include <string>
+#include <list>
+#include <typeinfo>
 #include "simpletype.h"
 #include "pointertype.h"
 #include "recordtype.h"
 #include "arraytype.h"
+#include "settype.h"
+#include "typeredef.h"
 using namespace std;
+
+extern list<Type*> typeList;
+
+//------------------------------------------------------------------------------
+// outputTypes
+void outputTypes(int level) {
+	while(!typeList.empty()) {
+		Type *type = typeList.front();
+		typeList.pop_front();
+
+		if(type->valid) {
+			for(int i = 0; i < level; i++) {
+				cout << "\t";
+			}
+
+			ArrayType *aType = dynamic_cast<ArrayType*>(type);
+			if(aType != NULL) {
+				cout << "typedef " << getFinalTypeName(aType->type) << " "
+					<< aType->name;
+
+				outputArrayRanges(aType);
+
+				cout << ";" << endl;
+				continue;
+			}
+
+			SetType *sType = dynamic_cast<SetType*>(type);
+			if(sType != NULL) {
+				cout << "typedef set " << sType->name << ";" << endl;
+				continue;
+			}
+
+			TypeRedef *reType = dynamic_cast<TypeRedef*>(type);
+			if(reType != NULL) {
+				cout << "typedef " << getFinalTypeName(reType->typeTo) 
+					<< " " << reType->name << ";" << endl;
+				continue;
+			}
+
+			PointerType *pType = dynamic_cast<PointerType*>(type);
+			if(pType != NULL) {
+				cout << "typedef " << getFinalTypeName(pType->typeTo) 
+					<< " *" << pType->name << ";" << endl;
+				continue;
+			}
+
+			RecordType *rType = dynamic_cast<RecordType*>(type);
+			if(rType != NULL) {
+				cout << "struct " << rType->name << " {" << endl;
+				for(vector<Variable*>::iterator i = rType->vars.begin();
+					i != rType->vars.end(); i++) {
+						outputVar(*i, level+1);
+				}
+				cout << "};" << endl;
+				continue;
+			}
+		}
+	}
+}
 
 //------------------------------------------------------------------------------
 // outputConst
@@ -113,7 +176,7 @@ void outputArrayRanges(ArrayType *rhs) {
 		i != rhs->dimRanges.end(); i++) {
 			// Make sure the start and end of the range are of the same type if not
 			// output an error.
-			if(i->end != i->start) {
+			if(typeid(*i) != typeid(*i)) {
 				cout << 
 					"***ERROR: the start and end of an array range must be the same type"
 					<< endl;
@@ -176,4 +239,12 @@ string getFinalTypeName(Type *rhs) {
 	else {
 		return rhs->name;
 	}
+}
+
+//------------------------------------------------------------------------------
+// outputHeader
+void outputHeader() {
+	cout << "#include <iostream>" << endl
+		<< "#include <set>" << endl
+		<< "using namespace std;" << endl << endl;
 }

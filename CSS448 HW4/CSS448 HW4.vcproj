@@ -235,6 +235,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\typeredef.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\variable.cpp"
 				>
 			</File>
@@ -317,6 +321,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\typeredef.h"
+				>
+			</File>
+			<File
 				RelativePath=".\variable.h"
 				>
 			</File>
@@ -331,6 +339,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
 		<File
 			RelativePath=".\Makefile"
 			>

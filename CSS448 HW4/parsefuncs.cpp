@@ -363,7 +363,6 @@ void addSetType() {
 
 	// Create the new SetType and set currentType to it.
 	SetType *temp = new SetType;
-	temp->name = symbolName;
 	temp->start = setStart;
 	temp->end = setEnd;
 	currentType = temp;

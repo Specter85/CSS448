@@ -6,6 +6,7 @@
 #include "pointertype.h"
 #include "recordtype.h"
 #include "arraytype.h"
+#include "typeredef.h"
 #include <iostream>
 using namespace std;
 
@@ -197,6 +198,8 @@ void BinTree::pCullHelper(Node *rhs) {
 			Type *pType = temp->typeTo;
 			for(;;) {
 				if(!pType->valid) {
+					cout << "***ERROR: PointerType " << temp->name <<
+						" points to an invalid type" << endl;
 					temp->valid = false;
 					break;
 				}
@@ -230,6 +233,20 @@ void BinTree::tCullHelper(Node *rhs, bool &clean) {
 		if(aTemp != NULL && aTemp->valid) {
 			Type *pType = aTemp->type;
 			if(!pType->valid) {
+				cout <<  "***ERROR: ArrayType " << aTemp->name <<
+					" has an invalid type" << endl;
+				aTemp->valid = false;
+				clean = false;
+			}
+		}
+
+		// See if rhs is an type redef if so make sure it is valid.
+		TypeRedef *reType = dynamic_cast<TypeRedef*>(rhs->data);
+		if(reType != NULL && reType->valid) {
+			Type *pType = reType->typeTo;
+			if(!pType->valid) {
+				cout <<  "***ERROR: TypeRedef " << aTemp->name <<
+					" has an invalid type" << endl;
 				aTemp->valid = false;
 				clean = false;
 			}
@@ -241,6 +258,8 @@ void BinTree::tCullHelper(Node *rhs, bool &clean) {
 			for(vector<Variable*>::iterator i = rTemp->vars.begin();
 				i != rTemp->vars.end(); i++) {
 					if((*i)->type == NULL || !(*i)->type->valid) {
+						cout << "***ERROR: RecordType " << rTemp->name <<
+							" has an invalid variable" << endl;
 						rTemp->valid = false;
 						clean = false;
 						break;

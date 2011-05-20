@@ -13,6 +13,7 @@
 #include "variable.h"
 #include "arraytype.h"
 #include "symboltable.h"
+#include "typeredef.h"
 using namespace std; 
 
 SymbolTable table;
@@ -28,6 +29,9 @@ stack<ArrayType*> arrayStack;
 list<Variable*> variableStack;
 // Stack of unfinished pointers.
 list<umfPointer> pointerStack;
+
+// List for holding onto types before they are output.
+list<Type*> typeList;
 
 Symbol *setStart = NULL;
 Symbol *setEnd = NULL;
@@ -65,7 +69,8 @@ SimpleType pParam("pParam");
 
 CompilationUnit    :  ProgramModule        
                    ;
-ProgramModule      :  yprogram yident { scopeName.assign(value); } ProgramParameters
+ProgramModule      :  { outputHeader(); }
+					  yprogram yident { scopeName.assign(value); } ProgramParameters
 					  { addScope(); }
 					  ysemicolon 
 					  ProgBlock 
@@ -97,7 +102,8 @@ ConstantDefList    :  ConstantDef ysemicolon
                    |  ConstantDefList ConstantDef ysemicolon
                    ;
 TypeDefBlock       :  /*** empty ***/
-                   |  ytype  TypeDefList { processUmfPointers(); }
+                   |  ytype  TypeDefList { processUmfPointers(); 
+                      outputTypes(table.getScopeLevel()); }
                    ;
 TypeDefList        :  TypeDef  ysemicolon
                    |  TypeDefList TypeDef ysemicolon  
@@ -116,9 +122,19 @@ ConstantDef        :  yident { symbolName.assign(value); } yequal  ConstExpressi
                    ;
 TypeDef            :  yident { printf(value.c_str()); printf(" "); symbolName.assign(value);
 					  typeName.assign(value); } yequal  Type 
-					  { currentType->name.assign(typeName); 
+					  {
+					  if(currentType->name != "") {
+					     TypeRedef *rTemp = new TypeRedef;
+					     rTemp->typeTo = currentType;
+					     currentType = rTemp;
+					  }
+					  else {
+					     currentType->name.assign(typeName);
+					  }
+					  
 					  if(table.lookUpCS(typeName) == NULL) {
 					     table.insert(currentType);
+					     typeList.push_back(currentType);
 					  }
 					  else {
 					     cout << "***ERROR: " << symbolName << " already in symbol table" << endl;
@@ -225,7 +241,7 @@ Subrange           :  ConstFactor { setStart = newSymbol;
 RecordType         :  yrecord {recordName.assign(symbolName); }
 					  FieldListSequence  yend { addRecord(); }
                    ;
-SetType            :  yset  yof  Subrange { addSetType(); }
+SetType            :  yset  yof  Subrange { addSetType(); currentType->display(0); }
                    ;
 PointerType        :  ycaret yident {  
 					  makePointerType(); }

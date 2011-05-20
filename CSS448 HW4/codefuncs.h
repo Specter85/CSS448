@@ -9,6 +9,9 @@
 #include "variable.h"
 #include "arraytype.h"
 
+// Function for outputing all valid types in typeList.
+void outputTypes(int level);
+
 // Function for outputing a C++ consant definition.
 void outputConst(Symbol *rhs, int level);
 
@@ -20,5 +23,8 @@ void outputArrayRanges(ArrayType *rhs);
 
 // Function for getting the final C++ type name of a Pascal Type.
 string getFinalTypeName(Type *rhs);
+
+// Function for outputing C++ header.
+void outputHeader();
 
 #endif

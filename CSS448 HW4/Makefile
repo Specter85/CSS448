@@ -2,9 +2,10 @@
 # Programers Mark Zachacz, Ilya Novichenko
 OBJ = main.o keywords.o yylex.o y.tab.o arraytype.o constant.o recordtype.o scope.o simpletype.o \
   symboltable.o stdidents.o variable.o pointertype.o parsefuncs.o bintree.o procfunc.o \
-  settype.o symbol.o codefuncs.o
+  settype.o symbol.o codefuncs.o typeredef.o
 H = y.tab.h yylex.h keywords.h
-HSYMBOLS = arraytype.h constant.h recordtype.h simpletype.h variable.h type.h pointertype.h
+HSYMBOLS = arraytype.h constant.h recordtype.h simpletype.h variable.h type.h pointertype.h \
+  typeredef.h
 
 a.out: $(OBJ) $(H)
 	g++ -g $(OBJ)
@@ -65,6 +66,9 @@ settype.o: settype.cpp settype.h type.h
 
 recordtype.o: recordtype.cpp recordtype.h variable.h stdidents.h type.h
 	g++ -c -g recordtype.cpp
+
+typeredef.o: typeredef.cpp typeredef.h type.h
+	g++ -c -g typeredef.cpp
 
 clean:
 	rm $(OBJ) a.out y.tab.c y.tab.h
