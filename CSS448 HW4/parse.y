@@ -16,6 +16,8 @@
 #include "typeredef.h"
 using namespace std; 
 
+int gLevel = 0;
+
 SymbolTable table;
 string symbolName;
 string typeName;
@@ -325,8 +327,32 @@ ActualParameters   :  yleftparen  ExpList  yrightparen
 ExpList            :  Expression   
                    |  ExpList  ycomma  Expression       
                    ;
-MemoryStatement    :  ynew  yleftparen  yident { printf(value.c_str()); printf(" "); } yrightparen  
-                   |  ydispose yleftparen  yident { printf(value.c_str()); printf(" "); } yrightparen
+MemoryStatement    :  ynew  yleftparen  yident { 
+					  Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
+					  if(var != NULL) {
+					     PointerType *type = dynamic_cast<PointerType*>(var->type);
+					     if(type != NULL) {
+					        for(int i = 0; i < gLevel; i++) {
+							   cout << "\t";
+							}
+					        cout << var->name << " = new " << getFinalTypeName(type->typeTo) << ";" << endl;
+					     }
+					  } 
+					  }
+					  yrightparen  
+                   |  ydispose yleftparen  yident  { 
+					  Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
+					  if(var != NULL) {
+					     PointerType *type = dynamic_cast<PointerType*>(var->type);
+					     if(type != NULL) {
+					        for(int i = 0; i < gLevel; i++) {
+							   cout << "\t";
+							}
+					        cout << "delete " << var->name << ";" << endl;
+					     }
+					  } 
+					  }
+					  yrightparen
                    ;
 
 /***************************  Expression Stuff  ******************************/
@@ -377,17 +403,23 @@ SubprogDeclList    :  /*** empty ***/
                    |  SubprogDeclList ProcedureDecl ysemicolon  
                    |  SubprogDeclList FunctionDecl ysemicolon
                    ;
-ProcedureDecl      :  ProcedureHeading  { addScope(); } ysemicolon  Block { table.exitScope(); }
+ProcedureDecl      :  ProcedureHeading  { addScope(); } ysemicolon  Block { 
+					  table.exitScope();
+					  for(int i = 0; i < table.getScopeLevel(); i++) {
+					     cout << "\t";
+					  }
+					  gLevel--;
+					  cout << "}" << endl; }
                    ;
-FunctionDecl       :  FunctionHeading  ycolon  yident { printf(value.c_str()); printf(" ");
-					  addScope(true); } ysemicolon  Block { table.exitScope(); }
+FunctionDecl       :  FunctionHeading  ycolon  yident { addScope(true); } 
+					  ysemicolon  Block { table.exitScope(); gLevel--; }
                    ;
-ProcedureHeading   :  yprocedure  yident { printf(value.c_str()); printf(" "); scopeName.assign(value); } 
-                   |  yprocedure  yident { printf(value.c_str()); printf(" "); scopeName.assign(value); 
+ProcedureHeading   :  yprocedure  yident { scopeName.assign(value); } 
+                   |  yprocedure  yident { scopeName.assign(value); 
                       } FormalParameters
                    ;
-FunctionHeading    :  yfunction  yident { printf(value.c_str()); printf(" "); scopeName.assign(value); } 
-                   |  yfunction  yident { printf(value.c_str()); printf(" "); scopeName.assign(value);
+FunctionHeading    :  yfunction  yident { scopeName.assign(value); } 
+                   |  yfunction  yident { scopeName.assign(value);
                       } FormalParameters
                    ;
 FormalParameters   :  yleftparen FormalParamList yrightparen 
@@ -395,8 +427,8 @@ FormalParameters   :  yleftparen FormalParamList yrightparen
 FormalParamList    :  OneFormalParam 
                    |  FormalParamList ysemicolon OneFormalParam
                    ;
-OneFormalParam     :  yvar  IdentList  ycolon  yident { printf(value.c_str()); printf(" "); addFuncVars(true); }
-                   |  IdentList  ycolon  yident { printf(value.c_str()); printf(" "); addFuncVars(false); }
+OneFormalParam     :  yvar  IdentList  ycolon  yident { addFuncVars(true); }
+                   |  IdentList  ycolon  yident { addFuncVars(false); }
                    ;
 
 /***************************  More Operators  ********************************/

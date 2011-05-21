@@ -5,9 +5,13 @@
 #ifndef CODE_FUNCS_H
 #define CODE_FUNCS_H
 #include "constant.h"
+#include "procfunc.h"
 #include "type.h"
 #include "variable.h"
 #include "arraytype.h"
+
+// Function for outputing the header of a function.
+void outputFunctionHeader(ProcFunc *rhs, int level);
 
 // Function for outputing all valid types in typeList.
 void outputTypes(int level);

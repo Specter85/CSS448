@@ -97,6 +97,15 @@ Symbol *SymbolTable::lookUp(const std::string &rhs) {
 	Symbol temp;
 	temp.name = rhs;
 
+	// See if the Symbol is a scope in the current scope if so return it.
+	Scope *current = currentScope->child;
+	while(current != NULL) {
+		if(dynamic_cast<ProcFunc*>(current)->name == rhs) {
+			return dynamic_cast<ProcFunc*>(current);
+		}
+		current = current->next;
+	}
+
 	// See if the Symbol is in the current scope if so return it.
 	Symbol *pTemp = currentScope->idents.retrieve(temp);
 	if(pTemp != NULL && pTemp->valid) {
@@ -107,6 +116,15 @@ Symbol *SymbolTable::lookUp(const std::string &rhs) {
 		// Loop through all the scope of all parents.
 		Scope *sco = currentScope->parent;
 		while(sco != NULL) {
+			// See if the Symbol is a scope in the current scope if so return it.
+			Scope *current = sco->child;
+			while(current != NULL) {
+				if(dynamic_cast<ProcFunc*>(current)->name == rhs) {
+					return dynamic_cast<ProcFunc*>(current);
+				}
+				current = current->next;
+			}
+
 			// See if the Symbol is in the scope of sco. If so return it.
 			pTemp = sco->idents.retrieve(temp);
 			if(pTemp != NULL && pTemp->valid) {
@@ -127,6 +145,16 @@ Symbol *SymbolTable::lookUp(const std::string &rhs) {
 Symbol *SymbolTable::lookUpCS(const std::string &rhs) {
 	Symbol temp;
 	temp.name = rhs;
+
+	// See if the Symbol is a scope in the current scope if so return it.
+	Scope *current = currentScope->child;
+	while(current != NULL) {
+		if(dynamic_cast<ProcFunc*>(current)->name == rhs) {
+			return dynamic_cast<ProcFunc*>(current);
+		}
+		current = current->next;
+	}
+
 	Symbol *toReturn = currentScope->idents.retrieve(temp);
 	return (toReturn != NULL && toReturn->valid) ? toReturn : NULL;
 }

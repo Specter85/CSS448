@@ -19,6 +19,8 @@
 
 using namespace std;
 
+extern int gLevel;
+
 // The symbol table.
 extern SymbolTable table;
 
@@ -76,6 +78,7 @@ void addScope(bool func) {
 	temp->name = scopeName;
 	temp->type = NULL;
 	table.enterScope(temp);
+	gLevel++;
 
 	// If the scope belongs to a functtion get its type.
 	if(func == true) {
@@ -116,6 +119,10 @@ void addScope(bool func) {
 		// Add the param to the scope's params and scope.
 		temp->params.push_back(sTemp);
 		table.insert(sTemp);
+	}
+
+	if(temp->level != 0) {
+		outputFunctionHeader(temp, temp->level - 1);
 	}
 }
 

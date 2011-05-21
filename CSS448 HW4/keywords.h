@@ -27,7 +27,7 @@ private:
 	};
 
 	// Const for the number of keywords in the class.
-	static const int NUM_KEYWORDS = 32;
+	static const int NUM_KEYWORDS = 38;
 	// Const for invalid strings.
 	static const int INVALID_KEYWORD = -1;
 	// The list of keywords in the class.

@@ -7,6 +7,7 @@
 #include <string>
 #include <list>
 #include <typeinfo>
+#include <set>
 #include "simpletype.h"
 #include "pointertype.h"
 #include "recordtype.h"
@@ -16,6 +17,52 @@
 using namespace std;
 
 extern list<Type*> typeList;
+
+extern int gLevel;
+
+//------------------------------------------------------------------------------
+// outputFunctionHeader
+void outputFunctionHeader(ProcFunc *rhs, int level) {
+	for(int i = 0; i < level; i++) {
+		cout << "\t";
+	}
+
+	if(rhs->type == NULL) {
+		cout << "void ";
+	}
+	else {
+		cout << getFinalTypeName(rhs->type) << " ";
+	}
+
+	cout << rhs->name << "(";
+
+	if(!rhs->params.empty()) {
+		for(int i = 0; i < (rhs->params.size() - 1); i++) {
+			Variable *current = rhs->params[i];
+			cout << getFinalTypeName(current->type) << " ";
+
+			if(current->ref) {
+				cout << "&";
+			}
+
+			cout << current->name << "," << endl;
+
+			for(int j = 0; j < level + 1; j++) {
+				cout << "\t";
+			}
+		}
+		Variable *current = rhs->params[rhs->params.size() - 1];
+		cout << getFinalTypeName(current->type) << " ";
+
+		if(current->ref) {
+			cout << "&";
+		}
+
+		cout << current->name;
+	}
+
+	cout << ") {" << endl;
+}
 
 //------------------------------------------------------------------------------
 // outputTypes
@@ -42,7 +89,7 @@ void outputTypes(int level) {
 
 			SetType *sType = dynamic_cast<SetType*>(type);
 			if(sType != NULL) {
-				cout << "typedef set " << sType->name << ";" << endl;
+				cout << "typedef set<int> " << sType->name << ";" << endl;
 				continue;
 			}
 

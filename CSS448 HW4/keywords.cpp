@@ -24,86 +24,104 @@ Keywords::Keywords() {
 	keywordList[4].tokenName = "const";
 	keywordList[4].tokenVal = yconst;
 
-	keywordList[5].tokenName = "div";
-	keywordList[5].tokenVal = ydiv;
+	keywordList[5].tokenName = "dispose";
+	keywordList[5].tokenVal = ydispose;
 
-	keywordList[6].tokenName = "do";
-	keywordList[6].tokenVal = ydo;
+	keywordList[6].tokenName = "div";
+	keywordList[6].tokenVal = ydiv;
 
-	keywordList[7].tokenName = "downto";
-	keywordList[7].tokenVal = ydownto;
+	keywordList[7].tokenName = "do";
+	keywordList[7].tokenVal = ydo;
 
-	keywordList[8].tokenName = "else";
-	keywordList[8].tokenVal = yelse;
+	keywordList[8].tokenName = "downto";
+	keywordList[8].tokenVal = ydownto;
 
-	keywordList[9].tokenName = "end";
-	keywordList[9].tokenVal = yend;
+	keywordList[9].tokenName = "else";
+	keywordList[9].tokenVal = yelse;
 
-	keywordList[10].tokenName = "false";
-	keywordList[10].tokenVal = yfalse;
+	keywordList[10].tokenName = "end";
+	keywordList[10].tokenVal = yend;
 
-	keywordList[11].tokenName = "for";
-	keywordList[11].tokenVal = yfor;
+	keywordList[11].tokenName = "false";
+	keywordList[11].tokenVal = yfalse;
 
-	keywordList[12].tokenName = "function";
-	keywordList[12].tokenVal = yfunction;
+	keywordList[12].tokenName = "for";
+	keywordList[12].tokenVal = yfor;
 
-	keywordList[13].tokenName = "if";
-	keywordList[13].tokenVal = yif;
+	keywordList[13].tokenName = "function";
+	keywordList[13].tokenVal = yfunction;
 
-	keywordList[14].tokenName = "in";
-	keywordList[14].tokenVal = yin;
+	keywordList[14].tokenName = "if";
+	keywordList[14].tokenVal = yif;
 
-	keywordList[15].tokenName = "mod";
-	keywordList[15].tokenVal = ymod;
+	keywordList[15].tokenName = "in";
+	keywordList[15].tokenVal = yin;
 
-	keywordList[16].tokenName = "nil";
-	keywordList[16].tokenVal = ynil;
+	keywordList[16].tokenName = "mod";
+	keywordList[16].tokenVal = ymod;
 
-	keywordList[17].tokenName = "not";
-	keywordList[17].tokenVal = ynot;
+	keywordList[17].tokenName = "new";
+	keywordList[17].tokenVal = ynew;
 
-	keywordList[18].tokenName = "of";
-	keywordList[18].tokenVal = yof;
+	keywordList[18].tokenName = "nil";
+	keywordList[18].tokenVal = ynil;
 
-	keywordList[19].tokenName = "or";
-	keywordList[19].tokenVal = yor;
+	keywordList[19].tokenName = "not";
+	keywordList[19].tokenVal = ynot;
 
-	keywordList[20].tokenName = "procedure";
-	keywordList[20].tokenVal = yprocedure;
+	keywordList[20].tokenName = "of";
+	keywordList[20].tokenVal = yof;
 
-	keywordList[21].tokenName = "program";
-	keywordList[21].tokenVal = yprogram;
+	keywordList[21].tokenName = "or";
+	keywordList[21].tokenVal = yor;
 
-	keywordList[22].tokenName = "record";
-	keywordList[22].tokenVal = yrecord;
+	keywordList[22].tokenName = "procedure";
+	keywordList[22].tokenVal = yprocedure;
 
-	keywordList[23].tokenName = "repeat";
-	keywordList[23].tokenVal = yrepeat;
+	keywordList[23].tokenName = "program";
+	keywordList[23].tokenVal = yprogram;
 
-	keywordList[24].tokenName = "set";
-	keywordList[24].tokenVal = yset;
+	keywordList[24].tokenName = "read";
+	keywordList[24].tokenVal = yread;
 
-	keywordList[25].tokenName = "then";
-	keywordList[25].tokenVal = ythen;
+	keywordList[25].tokenName = "readln";
+	keywordList[25].tokenVal = yreadln;
 
-	keywordList[26].tokenName = "to";
-	keywordList[26].tokenVal = yto;
+	keywordList[26].tokenName = "record";
+	keywordList[26].tokenVal = yrecord;
 
-	keywordList[27].tokenName = "true";
-	keywordList[27].tokenVal = ytrue;
+	keywordList[27].tokenName = "repeat";
+	keywordList[27].tokenVal = yrepeat;
 
-	keywordList[28].tokenName = "type";
-	keywordList[28].tokenVal = ytype;
+	keywordList[28].tokenName = "set";
+	keywordList[28].tokenVal = yset;
 
-	keywordList[29].tokenName = "until";
-	keywordList[29].tokenVal = yuntil;
+	keywordList[29].tokenName = "then";
+	keywordList[29].tokenVal = ythen;
 
-	keywordList[30].tokenName = "var";
-	keywordList[30].tokenVal = yvar;
+	keywordList[30].tokenName = "to";
+	keywordList[30].tokenVal = yto;
 
-	keywordList[31].tokenName = "while";
-	keywordList[31].tokenVal = ywhile;
+	keywordList[31].tokenName = "true";
+	keywordList[31].tokenVal = ytrue;
+
+	keywordList[32].tokenName = "type";
+	keywordList[32].tokenVal = ytype;
+
+	keywordList[33].tokenName = "until";
+	keywordList[33].tokenVal = yuntil;
+
+	keywordList[34].tokenName = "var";
+	keywordList[34].tokenVal = yvar;
+
+	keywordList[35].tokenName = "while";
+	keywordList[35].tokenVal = ywhile;
+
+	keywordList[36].tokenName = "write";
+	keywordList[36].tokenVal = ywrite;
+
+	keywordList[37].tokenName = "writeln";
+	keywordList[37].tokenVal = ywriteln;
 }
 
 //------------------------------------------------------------------------------
