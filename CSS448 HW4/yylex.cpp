@@ -246,7 +246,7 @@ int yylex() {
 						cin.get();
 
 						// Output the comment and continue.
-						cout << "(*";
+						cout << "/*";
 						for(;;) {
 							char temp;
 							temp = cin.get();
@@ -256,7 +256,7 @@ int yylex() {
 
 							if(temp == '*' && cin.peek() == ')') {
 								cin.get();
-								cout << "*)";
+								cout << "*/";
 								break;
 							}
 							else {
@@ -275,7 +275,7 @@ int yylex() {
 					return yleftbracket;
 				case '{':
 					// Output the comment.
-					cout << "{";
+					cout << "/*";
 					for(;;) {
 						char temp;
 						temp = cin.get();
@@ -284,7 +284,7 @@ int yylex() {
 						}
 
 						if(temp == '}') {
-							cout << "}";
+							cout << "*/";
 							break;
 						}
 						else {

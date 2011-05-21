@@ -340,10 +340,6 @@
 			>
 		</Filter>
 		<File
-			RelativePath=".\ClassDiagram1.cd"
-			>
-		</File>
-		<File
 			RelativePath=".\Makefile"
 			>
 		</File>
