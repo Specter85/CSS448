@@ -16,12 +16,19 @@
 #include "typeredef.h"
 using namespace std;
 
+// List for holding onto types before they are output.
 extern list<Type*> typeList;
 
 extern int gLevel;
 
 //------------------------------------------------------------------------------
 // outputFunctionHeader
+// Function for outputing a C++ function header given a Pascal type
+// ProcFunc and scope level. The function determines if return type of the
+// generated function is void by checking if ProcFunc has a valid type.
+// Parameters are generated using the ProcFuncs params vector. If a parameter 
+// variable has its ref flag set, it is generated as a pass by reference 
+// parameter variable. Otherwise, pass by value.
 void outputFunctionHeader(ProcFunc *rhs, int level) {
 	for(int i = 0; i < level; i++) {
 		cout << "\t";
@@ -66,6 +73,8 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 
 //------------------------------------------------------------------------------
 // outputTypes
+// Function for outputing a C++ type/typedef defintion given Pascal type
+// Type, in the typeList list, and a scope level.
 void outputTypes(int level) {
 	while(!typeList.empty()) {
 		Type *type = typeList.front();
@@ -290,6 +299,8 @@ string getFinalTypeName(Type *rhs) {
 
 //------------------------------------------------------------------------------
 // outputHeader
+// Function for generating the sandard C++ header from a Pascal program. This 
+// outputs the #include statements and the global using namespace std statement.
 void outputHeader() {
 	cout << "#include <iostream>" << endl
 		<< "#include <set>" << endl
