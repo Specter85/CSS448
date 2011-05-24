@@ -34,6 +34,7 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 		cout << "\t";
 	}
 
+	// Determine and output the functions return type.
 	if(rhs->type == NULL) {
 		cout << "void ";
 	}
@@ -43,6 +44,7 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 
 	cout << rhs->name << "(";
 
+	// Output the parameters in the ProcFunc params vector.
 	if(!rhs->params.empty()) {
 		for(int i = 0; i < (rhs->params.size() - 1); i++) {
 			Variable *current = rhs->params[i];
@@ -58,6 +60,7 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 				cout << "\t";
 			}
 		}
+		// Output the last parameter.
 		Variable *current = rhs->params[rhs->params.size() - 1];
 		cout << getFinalTypeName(current->type) << " ";
 
@@ -73,8 +76,10 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 
 //------------------------------------------------------------------------------
 // outputTypes
-// Function for outputing a C++ type/typedef defintion given Pascal type
-// Type, in the typeList list, and a scope level.
+// Function for outputing a C++ type/typedef defintion for all valid Pascal type
+// Type, in the typeList list, and a scope level. The function uses dynamic casting 
+// to determine what the Pascal Type in the list is so that it can then generate 
+// and output the correct C++ type/typedef decleration.
 void outputTypes(int level) {
 	while(!typeList.empty()) {
 		Type *type = typeList.front();
@@ -84,7 +89,8 @@ void outputTypes(int level) {
 			for(int i = 0; i < level; i++) {
 				cout << "\t";
 			}
-
+			
+			// If the Type is of type ArrayType output a C++ array typedef defintion for it.
 			ArrayType *aType = dynamic_cast<ArrayType*>(type);
 			if(aType != NULL) {
 				cout << "typedef " << getFinalTypeName(aType->type) << " "
@@ -96,12 +102,14 @@ void outputTypes(int level) {
 				continue;
 			}
 
+			// If the Type is of type SetType output a C++ set<int> typedef defintion for it.
 			SetType *sType = dynamic_cast<SetType*>(type);
 			if(sType != NULL) {
 				cout << "typedef set<int> " << sType->name << ";" << endl;
 				continue;
 			}
 
+			// If the Type is of type TypeRedef output a C++ typedef defintion for it.
 			TypeRedef *reType = dynamic_cast<TypeRedef*>(type);
 			if(reType != NULL) {
 				cout << "typedef " << getFinalTypeName(reType->typeTo) 
@@ -109,6 +117,7 @@ void outputTypes(int level) {
 				continue;
 			}
 
+			// If the Type is of type PointerType output a C++ pointer typedef defintion for it.
 			PointerType *pType = dynamic_cast<PointerType*>(type);
 			if(pType != NULL) {
 				cout << "typedef " << getFinalTypeName(pType->typeTo) 
@@ -116,6 +125,7 @@ void outputTypes(int level) {
 				continue;
 			}
 
+			// If the Type is of type RecordType output a C++ struct defintion for it.
 			RecordType *rType = dynamic_cast<RecordType*>(type);
 			if(rType != NULL) {
 				cout << "struct " << rType->name << " {" << endl;
@@ -133,7 +143,8 @@ void outputTypes(int level) {
 //------------------------------------------------------------------------------
 // outputConst
 // Function for outputing a C++ constant defintion given a Pascal constant
-// Symbol and scope level.
+// Symbol and scope level. The function uses dynamic casting to determine
+// if the parameter Symbol is of type bool, int, double, or char.
 void outputConst(Symbol *rhs, int level) {
 	// Output the number of tabs in the scope level.
 	for(int i = 0; i < level; i++) {
@@ -178,7 +189,9 @@ void outputConst(Symbol *rhs, int level) {
 //------------------------------------------------------------------------------
 // outputVar
 // Function for outputing a C++ variable defintion given a Pascal variable
-// Symbol and scople level.
+// Symbol and scope level. The function uses dynamic casting to determine
+// if the parameter Variable is a pointer, an array type, a record type, or
+// a single/standard variable with a type.
 void outputVar(Variable *rhs, int level) {
 	// Output the number of tabs in the scope level.
 	for(int i = 0; i < level; i++) {
@@ -223,7 +236,11 @@ void outputVar(Variable *rhs, int level) {
 
 //------------------------------------------------------------------------------
 // outputArrayRanges
-// Function for outputing the C++ ranges of a an array given a Pascal ArrayType.
+// Function for outputing the C++ ranges of an array given a Pascal ArrayType.
+// The function uses a for loop to traverse the ranges of the ArrayType parameter 
+// object and error checks them to make sure that the ranges are not reals or more
+// than a single character in size. If these is an invalid array range, an error 
+// message is displayed, otherwise the array ranges are simply output.
 void outputArrayRanges(ArrayType *rhs) {
 	typedef ArrayType::DimRange dRange;
 
@@ -271,7 +288,9 @@ void outputArrayRanges(ArrayType *rhs) {
 //------------------------------------------------------------------------------
 // getFinalTypeName
 // Function for getting the final C++ type name from a Pascal type. This converts
-// Pascal primitives to C++ primitives.
+// Pascal primitives to C++ primitives. The function uses if-else statements to 
+// convert Pascal SimpleType into the corresponding C++ type. If it is not a 
+// primitive type, it is returned as it is stored.
 string getFinalTypeName(Type *rhs) {
 	// If rhs is NULL output an error.
 	if(rhs == NULL) {

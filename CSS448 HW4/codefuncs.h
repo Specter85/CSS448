@@ -16,7 +16,7 @@ void outputFunctionHeader(ProcFunc *rhs, int level);
 // Function for outputing all valid types in typeList.
 void outputTypes(int level);
 
-// Function for outputing a C++ consant definition.
+// Function for outputing a C++ constant definition.
 void outputConst(Symbol *rhs, int level);
 
 // Function for outputing a C++ variable difinition.

@@ -421,7 +421,7 @@ Symbol *getNil() {
 
 //------------------------------------------------------------------------------
 // getNumber
-// Function for creating a number constant. Returns either a real of integer
+// Function for creating a number constant. Returns either a real or integer
 // constant.
 Symbol *getNumber() {
 	// See if there is a decimal point.
