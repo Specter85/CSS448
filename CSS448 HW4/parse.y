@@ -13,6 +13,7 @@
 #include "variable.h"
 #include "arraytype.h"
 #include "symboltable.h"
+#include "variable.h"
 #include "typeredef.h"
 using namespace std; 
 
@@ -23,6 +24,8 @@ string symbolName;
 string typeName;
 string scopeName;
 string recordName;
+
+int test = 0;
 
 Symbol *newSymbol = NULL;
 
@@ -51,7 +54,12 @@ SimpleType pParam("pParam");
 %union {
 	int ival;
 	double fval;
-	char *sval;
+	char *str;
+	struct {
+	   char *type;
+	   const char *str;
+	   int num;
+	} cur;
 }
 
 %start  CompilationUnit
@@ -313,14 +321,48 @@ IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
 DesignatorList     :  Designator  
                    |  DesignatorList  ycomma  Designator 
                    ;
-Designator         :  yident { printf(value.c_str()); printf(" "); } DesignatorStuff 
+Designator         :  yident { cout << value.c_str(); 
+					     Variable *var = dynamic_cast<Variable*>(table.lookUp(value.c_str()));
+					     if(var != NULL) {
+					        if(dynamic_cast<ArrayType*>(var->type) != NULL) {
+					           symbolName.assign(value.c_str());
+					        }
+					     }
+					  } DesignatorStuff {
+					     if(!strcmp($3.cur.type, "array")) {
+					        Variable *var = dynamic_cast<Variable*>(table.lookUp(symbolName));
+					        if(dynamic_cast<ArrayType*>(var->type)->numDim != $3.cur.num) {
+					           cout << "***ERROR: Incorrect number of dimensions" << endl;
+					        }
+					        symbolName.assign("");
+					     }
+					     else {
+					        cout << $3.cur.type;
+					        cout << "***ERROR: invalid RHS" << endl;
+					     }
+					  }
                    ;
-DesignatorStuff    :  /*** empty ***/
-                   |  DesignatorStuff  theDesignatorStuff
+DesignatorStuff    :  /*** empty ***/ {
+					  $$.cur.type = "empty";
+					  }
+                   |  DesignatorStuff  theDesignatorStuff {
+					     if(!strcmp($2.cur.type, "arrayindex")) {
+							if($1.cur.type != NULL) {
+								if(!strcmp($1.cur.type, "array")) {
+								   $$.cur.type = "array"; $$.cur.num = $$.cur.num + 1;
+								}
+								else if(!strcmp($1.cur.type, "empty")) {
+								   $$.cur.type = "array"; $$.cur.num = 1;
+								}
+							}
+					     }
+                      }
                    ;
-theDesignatorStuff :  ydot yident { printf(value.c_str()); printf(" "); }
-                   |  yleftbracket ExpList yrightbracket 
-                   |  ycaret 
+theDesignatorStuff :  ydot yident { 
+					  $$.cur.type = "element"; $$.cur.str = value.c_str(); }
+                   |  yleftbracket { cout << "["; } 
+                      ExpList yrightbracket { cout << "]"; $$.cur.type = "arrayindex"; }
+                   |  ycaret { cout << "->"; $$.cur.type = "pointer"; }
                    ;
 ActualParameters   :  yleftparen  ExpList  yrightparen
                    ;
