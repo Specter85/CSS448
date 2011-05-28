@@ -8,6 +8,7 @@
 #include "parsefuncs.h"
 #include "codefuncs.h"
 #include "pointertype.h"
+#include "recordtype.h"
 #include "symbol.h"
 #include "simpletype.h"
 #include "variable.h"
@@ -28,6 +29,7 @@ string recordName;
 int test = 0;
 
 Symbol *newSymbol = NULL;
+Symbol *currentBase = NULL;
 
 stack<string> identStack;
 stack<ArrayType*> arrayStack;
@@ -59,6 +61,7 @@ SimpleType pParam("pParam");
 	   char *type;
 	   const char *str;
 	   int num;
+	   void *sym;
 	} cur;
 }
 
@@ -71,6 +74,9 @@ SimpleType pParam("pParam");
         yrecord yrepeat yrightbracket yrightparen  ysemicolon yset ystring
         ythen  yto ytrue ytype  yuntil  yvar ywhile ywrite ywriteln ystring
         yunknown
+        
+%type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
+		SimpleExpression Expression TermExpr Term Factor
 
 %%
 /* rules section */
@@ -279,7 +285,15 @@ Statement          :  Assignment
                    |  ybegin StatementSequence yend
                    |  /*** empty ***/
                    ;
-Assignment         :  Designator yassign Expression /* maybe allow subprocedure call here? */
+Assignment         :  Designator yassign { cout << " = "; }
+					  Expression {
+						 Symbol *temp1 = static_cast<Symbol*>($1.sym);
+						 Symbol *temp2 = static_cast<Symbol*>($4.sym);
+					     if(temp1->name != temp2->name) {
+							cout << "***ERROR: type mismatch" << endl;
+					     }
+					     cout << ";" << endl;
+					  }/* maybe allow subprocedure call here? */
                    ;
 ProcedureCall      :  yident { printf(value.c_str()); printf(" "); }
                    |  yident { printf(value.c_str()); printf(" "); } ActualParameters
@@ -324,45 +338,103 @@ DesignatorList     :  Designator
 Designator         :  yident { cout << value.c_str(); 
 					     Variable *var = dynamic_cast<Variable*>(table.lookUp(value.c_str()));
 					     if(var != NULL) {
+							currentBase = var;
 					        if(dynamic_cast<ArrayType*>(var->type) != NULL) {
 					           symbolName.assign(value.c_str());
 					        }
 					     }
+					     else {
+					        cout << "***ERROR: " << value << " is not a variable" << endl;
+					     }
 					  } DesignatorStuff {
-					     if(!strcmp($3.cur.type, "array")) {
+					     if(!strcmp($3.type, "array")) {
 					        Variable *var = dynamic_cast<Variable*>(table.lookUp(symbolName));
-					        if(dynamic_cast<ArrayType*>(var->type)->numDim != $3.cur.num) {
+					        if(dynamic_cast<ArrayType*>(var->type)->numDim != $3.num) {
 					           cout << "***ERROR: Incorrect number of dimensions" << endl;
 					        }
+					        $$.type = "var";
+					        $$.sym = var->type;
 					        symbolName.assign("");
 					     }
+					     else if(!strcmp($3.type, "element")) {
+					        Symbol *temp = static_cast<Symbol*>($3.sym);
+					        Variable *var = dynamic_cast<Variable*>(temp);
+					        $$.type = "var";
+							$$.sym = var->type;
+					     }
+					     else if(!strcmp($3.type, "empty")) {
+					        $$.sym = table.lookUp(symbolName);
+					     }
 					     else {
-					        cout << $3.cur.type;
+					        cout << $3.type;
 					        cout << "***ERROR: invalid RHS" << endl;
 					     }
 					  }
                    ;
-DesignatorStuff    :  /*** empty ***/ {
-					  $$.cur.type = "empty";
+DesignatorStuff    :  /*** empty ***/ { 
+					  $$.type = "empty";
+					  $$.sym = currentBase;
 					  }
-                   |  DesignatorStuff  theDesignatorStuff {
-					     if(!strcmp($2.cur.type, "arrayindex")) {
-							if($1.cur.type != NULL) {
-								if(!strcmp($1.cur.type, "array")) {
-								   $$.cur.type = "array"; $$.cur.num = $$.cur.num + 1;
+                   |  DesignatorStuff theDesignatorStuff {
+					     if(!strcmp($2.type, "arrayindex")) {
+							if($1.type != NULL) {
+								if(!strcmp($1.type, "array")) {
+								   $$.type = "array"; $$.num = $$.num + 1;
 								}
-								else if(!strcmp($1.cur.type, "empty")) {
-								   $$.cur.type = "array"; $$.cur.num = 1;
+								else if(!strcmp($1.type, "empty")) {
+								   $$.type = "array"; $$.num = 1;
 								}
 							}
+					     }
+					     else if(!strcmp($2.type, "element")) {
+					        Symbol *temp = static_cast<Symbol*>($1.sym);
+					        RecordType *rTemp = 
+					        dynamic_cast<RecordType*>(dynamic_cast<Variable*>(temp)->type);
+					        PointerType *pTemp =
+					        dynamic_cast<PointerType*>(dynamic_cast<Variable*>(temp)->type);
+					        
+					        // Handle the case when temp is a record
+					        if(rTemp != NULL) {
+					           Variable *vTemp = rTemp->getMember($2.str);
+					           if(vTemp == NULL) {
+					              cout << "***ERROR: " << $2.str
+					              << "is not a member of " << rTemp->name;
+					           }
+					           else {
+					              cout << "." << vTemp->name;
+					              $$.type = "element";
+					              $$.sym = vTemp;
+					           }
+					        }
+					        // Handle the case when temp is a pointer.
+					        else if(pTemp != NULL) {
+					           rTemp = dynamic_cast<RecordType*>(pTemp->typeTo);
+					           Variable *vTemp = rTemp->getMember($2.str);
+					           if(vTemp == NULL) {
+					              cout << "***ERROR: " << $2.str
+					              << "is not a member of " << rTemp->name;
+					           }
+					           else {
+					              cout << $2.str;
+					              $$.type = "element";
+					              $$.sym = vTemp;
+					           }
+					        }
+					        else {
+					           cout << "***ERROR: LHS is not a record or a pointer" << endl;
+					        }
+					     }
+					     else if(!strcmp($2.type, "pointer")) {
+					        $$.type = "pointer";
+					        $$.sym = $1.sym;
 					     }
                       }
                    ;
 theDesignatorStuff :  ydot yident { 
-					  $$.cur.type = "element"; $$.cur.str = value.c_str(); }
+					  $$.type = "element"; $$.str = value.c_str(); }
                    |  yleftbracket { cout << "["; } 
-                      ExpList yrightbracket { cout << "]"; $$.cur.type = "arrayindex"; }
-                   |  ycaret { cout << "->"; $$.cur.type = "pointer"; }
+                      ExpList yrightbracket { cout << "]"; $$.type = "arrayindex"; }
+                   |  ycaret { cout << "->"; $$.type = "pointer"; }
                    ;
 ActualParameters   :  yleftparen  ExpList  yrightparen
                    ;
@@ -399,16 +471,28 @@ MemoryStatement    :  ynew  yleftparen  yident {
 
 /***************************  Expression Stuff  ******************************/
 
-Expression         :  SimpleExpression  
+Expression         :  SimpleExpression  { 
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      } 
                    |  SimpleExpression  Relation  SimpleExpression 
                    ;
-SimpleExpression   :  TermExpr
+SimpleExpression   :  TermExpr { 
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
                    |  UnaryOperator  TermExpr
                    ;
-TermExpr           :  Term  
+TermExpr           :  Term  { 
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      } 
                    |  TermExpr  AddOperator  Term
                    ;
-Term               :  Factor  
+Term               :  Factor  { 
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      } 
                    |  Term  MultOperator  Factor
                    ;
 Factor             :  ynumber
@@ -416,7 +500,10 @@ Factor             :  ynumber
                    |  yfalse
                    |  ynil
                    |  ystring
-                   |  Designator
+                   |  Designator { 
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
                    |  yleftparen  Expression  yrightparen
                    |  ynot Factor
                    |  Setvalue

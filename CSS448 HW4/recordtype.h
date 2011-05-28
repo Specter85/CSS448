@@ -22,8 +22,11 @@ struct RecordType : public Type {
 
 	~RecordType();						// Destructor
 
+	Variable *getMember(string name);
+
 	// Function for displaying the current object.
 	void display(int indent)const;
+
 };
 
 #endif

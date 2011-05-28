@@ -16,6 +16,17 @@ RecordType::~RecordType() {
 	}
 }
 
+Variable *RecordType::getMember(string name) {
+	for(vector<Variable*>::iterator i = vars.begin();
+		i != vars.end(); i++) {
+			if((*i)->name == name) {
+				return (*i);
+			}
+	}
+
+	return NULL;
+}
+
 //------------------------------------------------------------------------------
 // display
 // Function for displaying the current object with indent indent.
