@@ -21,6 +21,33 @@ extern list<Type*> typeList;
 
 extern int gLevel;
 
+bool isBool(std::string rhs, void *sym) {
+	if(rhs == "bool") {
+		return true;
+	}
+	
+	Symbol *temp = static_cast<Symbol*>(sym);
+	if((temp != NULL) && (temp->name == "boolean")) {
+		return true;
+	}
+
+	return false;
+}
+
+bool isNumber(std::string rhs, void *sym) {
+	if(rhs == "number" || rhs == "bool") {
+		return true;
+	}
+
+	Symbol *temp = static_cast<Symbol*>(sym);
+	if((temp != NULL) && (temp->name == "real" || temp->name == "integer" ||
+		temp->name == "boolean")) {
+			return true;
+	}
+
+	return false;	
+}
+
 //------------------------------------------------------------------------------
 // outputFunctionHeader
 // Function for outputing a C++ function header given a Pascal type

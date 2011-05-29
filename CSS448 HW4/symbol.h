@@ -15,7 +15,8 @@ using namespace std;
 // Some derived classes support displayVal and clone operations.
 //------------------------------------------------------------------------------
 struct Symbol {
-	string name;					// The name of the symbol
+	string name;					// The name of the symbol.
+	bool isConst;
 	bool valid;						// Is the Symbol valid.
 
 	Symbol();		// Constructor.

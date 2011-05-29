@@ -49,6 +49,8 @@ SimpleType pString("pString");
 SimpleType nil("nil");
 SimpleType pParam("pParam");
 
+string lSeperator;
+
 %}
 
 /* definition section */
@@ -76,7 +78,8 @@ SimpleType pParam("pParam");
         yunknown
         
 %type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
-		SimpleExpression Expression TermExpr Term Factor
+		SimpleExpression Expression TermExpr Term Factor Setvalue
+		FunctionCall MultOperator UnaryOperator AddOperator Relation
 
 %%
 /* rules section */
@@ -270,8 +273,15 @@ FieldList          :  IdentList  ycolon  Type { addRecordVars(); }
 
 /***************************  Statements  ************************************/
 
-StatementSequence  :  Statement  
-                   |  StatementSequence  ysemicolon  Statement
+StatementSequence  :  {
+					     for(int i = 0; i < gLevel; i++) {
+					        cout << "\t";
+					     }
+					  }
+					  Statement 
+                   |  StatementSequence  
+                      ysemicolon { cout << ";" << endl; } 
+                      Statement
                    ;
 Statement          :  Assignment
                    |  ProcedureCall
@@ -288,11 +298,20 @@ Statement          :  Assignment
 Assignment         :  Designator yassign { cout << " = "; }
 					  Expression {
 						 Symbol *temp1 = static_cast<Symbol*>($1.sym);
-						 Symbol *temp2 = static_cast<Symbol*>($4.sym);
-					     if(temp1->name != temp2->name) {
-							cout << "***ERROR: type mismatch" << endl;
+						 if((temp1->name == "real" || temp1->name == "integer") &&
+						    isNumber($4.type, $4.sym)) {
+						 }
+						 else if((temp1->name == "boolean") && isBool($4.type, $4.sym)) {
+						 }
+					     else if($4.sym != NULL) {
+					        Symbol *temp2 = static_cast<Symbol*>($4.sym);
+					        if(temp1->name != temp2->name) {
+							   cout << "***ERROR: type mismatch" << endl;
+							}
 					     }
-					     cout << ";" << endl;
+					     else {
+					        cout << "***ERROR: type mismatch" << endl;
+					     }
 					  }/* maybe allow subprocedure call here? */
                    ;
 ProcedureCall      :  yident { printf(value.c_str()); printf(" "); }
@@ -325,8 +344,9 @@ WhichWay           :  yto  |  ydownto
 IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
                    |  yreadln  
                    |  yreadln  yleftparen DesignatorList  yrightparen 
-                   |  ywrite  yleftparen  ExpList  yrightparen
-                   |  ywriteln  
+                   |  ywrite { lSeperator = "<<"; cout << "cout << "; } 
+                      yleftparen  ExpList  yrightparen
+                   |  ywriteln { cout << "cout << endl;" << endl; }
                    |  ywriteln  yleftparen  ExpList  yrightparen 
                    ;
 
@@ -336,34 +356,90 @@ DesignatorList     :  Designator
                    |  DesignatorList  ycomma  Designator 
                    ;
 Designator         :  yident { cout << value.c_str(); 
-					     Variable *var = dynamic_cast<Variable*>(table.lookUp(value.c_str()));
+					     Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
+						 Symbol *temp = table.lookUp(value);
 					     if(var != NULL) {
 							currentBase = var;
-					        if(dynamic_cast<ArrayType*>(var->type) != NULL) {
-					           symbolName.assign(value.c_str());
-					        }
+					     }
+					     else if(temp != NULL && temp->isConst) {
+							currentBase = temp;
 					     }
 					     else {
+							Symbol *temp = new Symbol;
+							currentBase = temp;
 					        cout << "***ERROR: " << value << " is not a variable" << endl;
 					     }
+					     symbolName.assign(value.c_str());
 					  } DesignatorStuff {
 					     if(!strcmp($3.type, "array")) {
 					        Variable *var = dynamic_cast<Variable*>(table.lookUp(symbolName));
-					        if(dynamic_cast<ArrayType*>(var->type)->numDim != $3.num) {
-					           cout << "***ERROR: Incorrect number of dimensions" << endl;
-					        }
-					        $$.type = "var";
-					        $$.sym = var->type;
-					        symbolName.assign("");
+					        ArrayType *arr = dynamic_cast<ArrayType*>(var->type);
+					        if(arr != NULL) {
+								if(arr->numDim != $3.num) {
+								   cout << "***ERROR: Incorrect number of dimensions" << endl;
+								}
+								$$.type = "var";
+								$$.str = arr->type->name.c_str();
+								$$.sym = arr->type;
+								symbolName.assign("");
+							}
 					     }
 					     else if(!strcmp($3.type, "element")) {
 					        Symbol *temp = static_cast<Symbol*>($3.sym);
 					        Variable *var = dynamic_cast<Variable*>(temp);
 					        $$.type = "var";
+					        $$.str = var->type->name.c_str();
 							$$.sym = var->type;
 					     }
 					     else if(!strcmp($3.type, "empty")) {
-					        $$.sym = table.lookUp(symbolName);
+					        Symbol *temp = table.lookUp(symbolName);
+					        Variable *vTemp = dynamic_cast<Variable*>(temp);
+					        if(vTemp != NULL) {
+								$$.type = "var";
+								$$.str = vTemp->type->name.c_str();
+								$$.sym = vTemp->type;
+							}
+							
+							Constant<int> *iTemp = dynamic_cast<Constant<int>*>(temp);
+							if(iTemp != NULL) {
+								$$.type = "const";
+								$$.str = iTemp->type->name.c_str();
+								$$.sym = iTemp->type;
+							}
+							
+							Constant<double> *dTemp = dynamic_cast<Constant<double>*>(temp);
+							if(dTemp != NULL) {
+								$$.type = "const";
+								$$.str = dTemp->type->name.c_str();
+								$$.sym = dTemp->type;
+							}
+							
+							Constant<bool> *bTemp = dynamic_cast<Constant<bool>*>(temp);
+							if(bTemp != NULL) {
+								$$.type = "const";
+								$$.str = bTemp->type->name.c_str();
+								$$.sym = bTemp->type;
+							}
+							
+							Constant<string> *sTemp = dynamic_cast<Constant<string>*>(temp);
+							if(sTemp != NULL) {
+								$$.type = "const";
+								$$.str = sTemp->type->name.c_str();
+								$$.sym = sTemp->type;
+							}
+							
+							Constant<void*> *nTemp = dynamic_cast<Constant<void*>*>(temp);
+							if(nTemp != NULL) {
+								$$.type = "pointer";
+								$$.str = nTemp->type->name.c_str();
+								$$.sym = NULL;
+							}
+							
+							if(temp == NULL) {
+							   $$.type = "bad";
+							   $$.str = "bad";
+							   $$.sym = NULL;
+							}
 					     }
 					     else {
 					        cout << $3.type;
@@ -439,7 +515,7 @@ theDesignatorStuff :  ydot yident {
 ActualParameters   :  yleftparen  ExpList  yrightparen
                    ;
 ExpList            :  Expression   
-                   |  ExpList  ycomma  Expression       
+                   |  ExpList  ycomma { cout << lSeperator; } Expression       
                    ;
 MemoryStatement    :  ynew  yleftparen  yident { 
 					  Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
@@ -475,39 +551,127 @@ Expression         :  SimpleExpression  {
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                       } 
-                   |  SimpleExpression  Relation  SimpleExpression 
+                   |  SimpleExpression  Relation  SimpleExpression {
+                         if(!(isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
+							cout << "***ERROR: relations can contain only numbers" << endl;
+                         }
+                      }
                    ;
 SimpleExpression   :  TermExpr { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                       }
-                   |  UnaryOperator  TermExpr
+                   |  UnaryOperator  TermExpr {
+                         if(!isNumber($2.type, $2.sym)) {
+                            cout << 
+                            "***ERROR: unary operators can only be applied to numbers" 
+                            << endl;
+                         }
+                         $$.type = $2.type;
+                         $$.sym = $2.sym;
+                      }
                    ;
 TermExpr           :  Term  { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                       } 
-                   |  TermExpr  AddOperator  Term
+                   |  TermExpr  AddOperator  Term {
+                         if((isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
+                            if((!strcmp($2.type, "bool")) && (!isBool($1.type, $1.sym)
+                            || !isBool($3.type, $3.sym))) {
+                               cout <<
+                               "***ERROR: or can only be used with bools" << endl;
+                            }
+                         }
+                         else {
+                            cout <<
+                            "***ERROR: only numbers can be added" << endl;
+                         }
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
                    ;
 Term               :  Factor  { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                       } 
-                   |  Term  MultOperator  Factor
+                   |  Term  MultOperator  Factor {
+                         if((isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
+                            if((!strcmp($2.type, "int")) && (!(string($1.str) == "integer") ||
+                            !(string($3.str) == "integer"))) {
+                               cout <<
+                               "***ERROR: div and mod can only be applied to ints"
+                               << endl;
+                            }
+                            
+                            if((!strcmp($2.type, "bool")) && (!isBool($1.type, $1.sym)
+                            || !isBool($3.type, $3.sym))) {
+                               cout <<
+                               "***ERROR: and can only be used with bools" << endl;
+                            }
+                         }
+                         else {
+                            cout <<
+                            "***ERROR: only numbers can be added" << endl;
+                         }
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
                    ;
-Factor             :  ynumber
-                   |  ytrue
-                   |  yfalse
-                   |  ynil
-                   |  ystring
+Factor             :  ynumber {
+					     Symbol *temp = getNumber();
+					     temp->displayVal();
+					     Constant<int> *iTemp = dynamic_cast<Constant<int>*>(temp);
+					     if(iTemp != NULL) {
+					        $$.str = iTemp->type->name.c_str();
+					     }
+					     Constant<double> *dTemp = dynamic_cast<Constant<double>*>(temp);
+					     if(dTemp != NULL) {
+					        $$.str = dTemp->type->name.c_str();
+					     }
+					     delete temp;
+					     $$.type = "number";
+					  }
+                   |  ytrue {
+                         cout << "true";
+                         $$.type = "bool";
+                         $$.sym = NULL;
+                      }
+                   |  yfalse {
+                         cout << "false";
+                         $$.type = "bool";
+                         $$.sym = NULL;
+                      }
+                   |  ynil {
+                         cout << "NULL";
+                         $$.type = "pointer";
+                         $$.sym = NULL;
+                      }
+                   |  ystring {
+                         cout << "\"" << value << "\"";
+                         $$.type = "string";
+                         $$.sym = NULL;
+                      }
                    |  Designator { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                       }
-                   |  yleftparen  Expression  yrightparen
-                   |  ynot Factor
-                   |  Setvalue
-                   |  FunctionCall
+                   |  yleftparen  Expression  yrightparen {
+                         $$.type = $2.type;
+                         $$.sym = $2.type;
+                      }
+                   |  ynot { cout << "!"; } Factor {
+                         $$.type = $3.type;
+                         $$.sym = $3.sym;
+                      }
+                   |  Setvalue {
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
+                   |  FunctionCall {
+                         $$.type = $1.type;
+                         $$.sym = $1.sym;
+                      }
                    ;
 /*  Functions with no parameters have no parens, but you don't need         */
 /*  to handle that in FunctionCall because it is handled by Designator.     */
@@ -562,14 +726,25 @@ OneFormalParam     :  yvar  IdentList  ycolon  yident { addFuncVars(true); }
 
 /***************************  More Operators  ********************************/
 
-UnaryOperator      :  yplus | yminus
+UnaryOperator      :  yplus { cout << "+"; } | yminus { cout << "-"; }
                    ;
-MultOperator       :  ymultiply | ydivide | ydiv | ymod | yand 
+MultOperator       :  ymultiply { cout << " * "; $$.type = "number"; }
+				   |  ydivide { cout << " / "; $$.type = "number"; }
+				   |  ydiv { cout << " / "; $$.type = "int"; }
+				   |  ymod { cout << " % "; $$.type = "int"; }
+				   |  yand { cout << " && "; $$.type = "bool"; }
                    ;
-AddOperator        :  yplus | yminus | yor
+AddOperator        :  yplus { cout << " + "; $$.type = "number"; }
+				   |  yminus { cout << " - "; $$.type = "number"; }
+				   |  yor { cout << " || "; $$.type = "bool"; }
                    ;
-Relation           :  yequal  | ynotequal | yless | ygreater 
-                   |  ylessequal | ygreaterequal | yin
+Relation           :  yequal { cout << " == "; $$.type = "number"; } 
+				   |  ynotequal { cout << " != "; $$.type = "number"; }
+				   |  yless { cout << " < "; $$.type = "number"; }
+				   |  ygreater { cout << " > "; $$.type = "number"; }
+                   |  ylessequal { cout << " <= "; $$.type = "number"; }
+                   |  ygreaterequal { cout << " >= "; $$.type = "number"; }
+                   |  yin
                    ;
 
 %%

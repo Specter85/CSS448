@@ -22,6 +22,8 @@ struct Constant : public Symbol {
 	SimpleType *type;			// The type of the constant.
 	TYPE value;					// The value of the constant.
 
+	Constant();					// Constructor
+
 	// Template function called to display a Constant of a given scope.
 	void display(int indent)const;
 
@@ -31,6 +33,13 @@ struct Constant : public Symbol {
 	// Template function called to clone/duplicate a Constant object.
 	Symbol *clone();
 };
+
+//------------------------------------------------------------------------------
+// Constructor
+template<class TYPE>
+Constant<TYPE>::Constant() {
+	isConst = true;
+}
 
 //------------------------------------------------------------------------------
 // display

@@ -4,11 +4,19 @@
 
 #ifndef CODE_FUNCS_H
 #define CODE_FUNCS_H
+#include <string>
 #include "constant.h"
 #include "procfunc.h"
 #include "type.h"
 #include "variable.h"
 #include "arraytype.h"
+
+// Function for determining if a nonterminal is a number.
+// Allows ints, reals, and bools.
+bool isNumber(std::string rhs, void *sym);
+
+// Function for determining if a nonterminal is a bool.
+bool isBool(std::string rhs, void *sym);
 
 // Function for outputing the header of a function.
 void outputFunctionHeader(ProcFunc *rhs, int level);

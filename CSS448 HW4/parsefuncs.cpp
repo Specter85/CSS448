@@ -442,6 +442,7 @@ Symbol *getNumber() {
 		// If there is no exponent just make and return the real constant.
 		if(test == value.npos) {
 			Constant<double> *temp = new Constant<double>;
+			temp->type = (SimpleType*)sit.getSymbol(string("real"));
 			temp->value = atof(value.c_str());
 			return temp;
 		}
