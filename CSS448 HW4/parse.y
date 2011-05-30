@@ -25,6 +25,7 @@ string symbolName;
 string typeName;
 string scopeName;
 string recordName;
+string forControl;
 
 int test = 0;
 
@@ -80,6 +81,8 @@ string lSeperator;
 %type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
 		SimpleExpression Expression TermExpr Term Factor Setvalue
 		FunctionCall MultOperator UnaryOperator AddOperator Relation
+		
+%type <ival> WhichWay
 
 %%
 /* rules section */
@@ -176,7 +179,7 @@ ConstExpression    :  ConstFactor
                    |  UnaryOperator ConstFactor             /* you finish it */
                    |  ystring { newSymbol = getString(); } 
                    ;
-ConstFactor        :  yident { printf(value.c_str()); printf(" ");
+ConstFactor        :  yident { /*printf(value.c_str()); printf(" ");*/
 					  Symbol *tVal = table.lookUp(value);
 					  if(tVal == NULL) {
 						  tVal = sit.getSymbol(value);
@@ -357,10 +360,49 @@ RepeatStatement    :  yrepeat { cout << "do {"; }
 					     cout << ")); ";
 					  }  
                    ;
-ForStatement       :  yfor  yident { printf(value.c_str()); printf(" "); } yassign  Expression  WhichWay  Expression
-                            ydo  Statement
+ForStatement       :  yfor  yident { forControl.assign(value);
+					     cout << "for(" << forControl;
+					  } 
+					  yassign { cout << " = "; }
+					  Expression {
+					     Variable *temp = dynamic_cast<Variable*>(table.lookUp(forControl));
+					     if(temp == NULL) {
+					        cout << "***ERROR: " <<
+					        symbolName << " does not exist";
+					     }
+					     else {
+							 if(temp->type->name != "integer" || strcmp($6.str, "integer")) {
+								cout << "***ERROR: for statments can only be controled by ints";
+							 }
+						 }
+						 
+						 cout << ";";
+					  } 
+					  WhichWay {
+					     if($8 == 1) {
+					        cout << " " << forControl << " <= ";
+					     }
+					     else {
+					        cout << " " << forControl << " >= ";
+					     }
+					  }
+					  Expression {
+					     if(!strcmp($10.str, "integer")) {
+					        if($8 == 1) {
+					           cout << "; " << forControl << "++) {";
+					        }
+					        else {
+					           cout << "; " << forControl << "--) {";
+					        }
+					     }
+					     else {
+					        cout << "***ERROR: for statments can only be controled by ints";
+					     }
+					  }
+                      ydo 
+                      Statement { cout << "}"; }
                    ;
-WhichWay           :  yto  |  ydownto
+WhichWay           :  yto { $$ = 1; } |  ydownto { $$ = 0; }
                    ;
 IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
                    |  yreadln  
@@ -402,6 +444,7 @@ Designator         :  yident { cout << value.c_str();
 								}
 								$$.type = "var";
 								$$.str = arr->type->name.c_str();
+								cout << $$.str;
 								$$.sym = arr->type;
 								symbolName.assign("");
 							}
