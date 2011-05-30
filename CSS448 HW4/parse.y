@@ -273,25 +273,20 @@ FieldList          :  IdentList  ycolon  Type { addRecordVars(); }
 
 /***************************  Statements  ************************************/
 
-StatementSequence  :  {
-					     for(int i = 0; i < gLevel; i++) {
-					        cout << "\t";
-					     }
-					  }
-					  Statement 
+StatementSequence  :  Statement
                    |  StatementSequence  
-                      ysemicolon { cout << ";" << endl; } 
+                      ysemicolon 
                       Statement
                    ;
-Statement          :  Assignment
-                   |  ProcedureCall
+Statement          :  Assignment { cout << ";"; }
+                   |  ProcedureCall { cout << ";"; }
                    |  IfStatement
                    |  CaseStatement
                    |  WhileStatement
                    |  RepeatStatement
                    |  ForStatement
-                   |  IOStatement
-                   |  MemoryStatement
+                   |  IOStatement { cout << ";"; }
+                   |  MemoryStatement { cout << ";"; }
                    |  ybegin StatementSequence yend
                    |  /*** empty ***/
                    ;
@@ -317,10 +312,18 @@ Assignment         :  Designator yassign { cout << " = "; }
 ProcedureCall      :  yident { printf(value.c_str()); printf(" "); }
                    |  yident { printf(value.c_str()); printf(" "); } ActualParameters
                    ;
-IfStatement        :  yif  Expression  ythen  Statement  ElsePart
+IfStatement        :  yif { cout << "if("; }
+					  Expression {
+					     if(strcmp($3.type, "bool")) {
+					        cout << "***ERROR: If statments can only be controled by "
+					        << "bool values" << endl;
+					     }
+					     cout << ") ";
+					  } 
+					  ythen { cout << "{"; } Statement { cout << endl << "}"; } ElsePart
                    ;
 ElsePart           :  /*** empty ***/
-                   |  yelse  Statement  
+                   |  yelse { cout << "else"; } Statement
                    ;
 CaseStatement      :  ycase  Expression  yof  CaseList  yend
                    ;
@@ -555,6 +558,9 @@ Expression         :  SimpleExpression  {
                          if(!(isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
 							cout << "***ERROR: relations can contain only numbers" << endl;
                          }
+                         $$.type = "bool";
+                         $$.str = "bool";
+                         $$.sym = sit.getSymbol("boolean");
                       }
                    ;
 SimpleExpression   :  TermExpr { 
