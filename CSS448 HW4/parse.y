@@ -335,9 +335,27 @@ Case               :  CaseLabelList  ycolon  Statement
 CaseLabelList      :  ConstExpression  
                    |  CaseLabelList  ycomma  ConstExpression   
                    ;
-WhileStatement     :  ywhile  Expression  ydo  Statement  
+WhileStatement     :  ywhile { cout << "while("; } 
+					  Expression {
+					     if(strcmp($3.type, "bool")) {
+					        cout << "***ERROR: while statments can only be controled by "
+					        << "bool values" << endl;
+					     }
+					     cout << ") {";
+					  }  
+					  ydo  
+					  Statement { cout << endl << "}"; }
                    ;
-RepeatStatement    :  yrepeat  StatementSequence  yuntil  Expression
+RepeatStatement    :  yrepeat { cout << "do {"; } 
+					  StatementSequence 
+					  yuntil { cout << endl << "} while(!("; }
+					  Expression {
+					     if(strcmp($6.type, "bool")) {
+					        cout << "***ERROR: while statments can only be controled by "
+					        << "bool values" << endl;
+					     }
+					     cout << ")); ";
+					  }  
                    ;
 ForStatement       :  yfor  yident { printf(value.c_str()); printf(" "); } yassign  Expression  WhichWay  Expression
                             ydo  Statement
@@ -349,8 +367,9 @@ IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
                    |  yreadln  yleftparen DesignatorList  yrightparen 
                    |  ywrite { lSeperator = "<<"; cout << "cout << "; } 
                       yleftparen  ExpList  yrightparen
-                   |  ywriteln { cout << "cout << endl;" << endl; }
-                   |  ywriteln  yleftparen  ExpList  yrightparen 
+                   |  ywriteln { cout << "cout << endl" << endl; }
+                   |  ywriteln { lSeperator = "<<"; cout << "cout << "; } 
+                      yleftparen  ExpList  yrightparen
                    ;
 
 /***************************  Designator Stuff  ******************************/
