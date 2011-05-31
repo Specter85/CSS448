@@ -69,7 +69,7 @@ string lSeperator;
 }
 
 %start  CompilationUnit
-%token  yand yarray yassign ybegin ycaret ycase ycolon ycomma yconst ydispose 
+%token  <cur> yand yarray yassign ybegin ycaret ycase ycolon ycomma yconst ydispose 
         ydiv ydivide ydo  ydot ydotdot ydownto yelse yend yequal yfalse
         yfor yfunction ygreater ygreaterequal yident  yif yin yleftbracket
         yleftparen yless ylessequal yminus ymod ymultiply ynew ynil ynot 
@@ -81,6 +81,7 @@ string lSeperator;
 %type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
 		SimpleExpression Expression TermExpr Term Factor Setvalue
 		FunctionCall MultOperator UnaryOperator AddOperator Relation
+		ExpList
 		
 %type <ival> WhichWay
 
@@ -433,10 +434,10 @@ Designator         :  yident { cout << value.c_str();
 							currentBase = temp;
 					        cout << "***ERROR: " << value << " is not a variable" << endl;
 					     }
-					     symbolName.assign(value.c_str());
+					     $1.type = strdup(value.c_str());
 					  } DesignatorStuff {
 					     if(!strcmp($3.type, "array")) {
-					        Variable *var = dynamic_cast<Variable*>(table.lookUp(symbolName));
+					        Variable *var = dynamic_cast<Variable*>(table.lookUp($1.type));
 					        ArrayType *arr = dynamic_cast<ArrayType*>(var->type);
 					        if(arr != NULL) {
 								if(arr->numDim != $3.num) {
@@ -444,7 +445,6 @@ Designator         :  yident { cout << value.c_str();
 								}
 								$$.type = "var";
 								$$.str = arr->type->name.c_str();
-								cout << $$.str;
 								$$.sym = arr->type;
 								symbolName.assign("");
 							}
@@ -457,7 +457,7 @@ Designator         :  yident { cout << value.c_str();
 							$$.sym = var->type;
 					     }
 					     else if(!strcmp($3.type, "empty")) {
-					        Symbol *temp = table.lookUp(symbolName);
+					        Symbol *temp = table.lookUp($1.type);
 					        Variable *vTemp = dynamic_cast<Variable*>(temp);
 					        if(vTemp != NULL) {
 								$$.type = "var";
@@ -510,6 +510,7 @@ Designator         :  yident { cout << value.c_str();
 					        cout << $3.type;
 					        cout << "***ERROR: invalid RHS" << endl;
 					     }
+					     free($1.type);
 					  }
                    ;
 DesignatorStuff    :  /*** empty ***/ { 
@@ -574,13 +575,32 @@ DesignatorStuff    :  /*** empty ***/ {
 theDesignatorStuff :  ydot yident { 
 					  $$.type = "element"; $$.str = value.c_str(); }
                    |  yleftbracket { cout << "["; } 
-                      ExpList yrightbracket { cout << "]"; $$.type = "arrayindex"; }
+                      ExpList yrightbracket {
+                      if(!strcmp($3.type, "string") && $3.type[1] != '\0') {
+                         cout << "***ERROR: arrays cannot be indexed bys strings" << endl;
+                      }
+                      else if(strcmp($3.type, "number") || strcmp($3.type, "char")) {
+                         if($3.str != NULL && strcmp($3.str, "integer")) {
+						    cout << "***ERROR: arrays cannot be indexed by reals" << endl;
+						 }
+                      }
+                      else {
+                         cout << "***ERROR: arrays can only be indexed by chars and ints" << endl;
+                      }
+                      cout << "]"; 
+                      $$.type = "arrayindex"; }
                    |  ycaret { cout << "->"; $$.type = "pointer"; }
                    ;
 ActualParameters   :  yleftparen  ExpList  yrightparen
                    ;
-ExpList            :  Expression   
-                   |  ExpList  ycomma { cout << lSeperator; } Expression       
+ExpList            :  Expression { 
+					     $$.type = $1.type;
+					     $$.sym = $1.sym;
+					  }
+                   |  ExpList  ycomma { cout << lSeperator; } Expression {
+                         $$.type = $1.type;
+                         $$.sym = $1.type;
+                      }     
                    ;
 MemoryStatement    :  ynew  yleftparen  yident { 
 					  Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
