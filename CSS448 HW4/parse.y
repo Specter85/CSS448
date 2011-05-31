@@ -318,25 +318,38 @@ ProcedureCall      :  yident { printf(value.c_str()); printf(" "); }
 IfStatement        :  yif { cout << "if("; }
 					  Expression {
 					     if(strcmp($3.type, "bool")) {
-					        cout << "***ERROR: If statments can only be controled by "
+					        cout << "***ERROR: If statments can only be controlled by "
 					        << "bool values" << endl;
 					     }
 					     cout << ") ";
 					  } 
-					  ythen { cout << "{"; } Statement { cout << endl << "}"; } ElsePart
+					  ythen { cout << " {"; } Statement { cout << endl << "}"; } ElsePart
                    ;
 ElsePart           :  /*** empty ***/
                    |  yelse { cout << "else"; } Statement
                    ;
-CaseStatement      :  ycase  Expression  yof  CaseList  yend
+CaseStatement      :  ycase { cout << "switch("; }  
+					  Expression {
+					     if(strcmp($3.type, "integer") /*|| strcmp($3.type, "char")*/) {
+					        cout << "***ERROR: Switch statments can only be controlled by "
+					        << "int and char values" << endl;
+					     }
+					     cout << ") ";
+					  } 
+					  yof { cout << " {" << endl; } CaseList  yend { cout << endl << "}"; }
                    ;
 CaseList           :  Case
                    |  CaseList  ysemicolon  Case  
                    ;
-Case               :  CaseLabelList  ycolon  Statement
+Case               :  CaseLabelList  ycolon { cout << ": "; } Statement { cout << "break;" << endl; }
                    ;
-CaseLabelList      :  ConstExpression  
-                   |  CaseLabelList  ycomma  ConstExpression   
+CaseLabelList      :  ConstExpression {
+					     if(strcmp($1.type, "integer") /*|| strcmp($3.type, "char")*/) {
+					        cout << "***ERROR: Switch statement, case constant can only be an "
+					        << "int or char value" << endl;
+					     }
+					  } 
+                   |  CaseLabelList  ycomma { cout << ":" << endl; } ConstExpression   
                    ;
 WhileStatement     :  ywhile { cout << "while("; } 
 					  Expression {
