@@ -81,7 +81,7 @@ string lSeperator;
 %type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
 		SimpleExpression Expression TermExpr Term Factor Setvalue
 		FunctionCall MultOperator UnaryOperator AddOperator Relation
-		ExpList
+		ExpList ConstFactor ConstExpression
 		
 %type <ival> WhichWay
 
@@ -108,7 +108,7 @@ IdentList          :  yident { identStack.push(value); }
 /**************************  Declarations section ***************************/
 
 ProgBlock          :  Declarations  ybegin { cout << "int main() {" << endl; }
-					  StatementSequence  yend { cout << "}"; }
+					  StatementSequence  yend { cout << endl << "}"; }
                    ;
 Block              :  Declarations  ybegin 
 					  StatementSequence  yend
@@ -177,8 +177,12 @@ VariableDecl       :  IdentList  ycolon  Type { addVars(); }
 /***************************  Const/Type Stuff  ******************************/
 
 ConstExpression    :  ConstFactor
-                   |  UnaryOperator ConstFactor             /* you finish it */
-                   |  ystring { newSymbol = getString(); } 
+                   |  UnaryOperator ConstFactor
+                   |  ystring { newSymbol = getString();
+                         $$.type = "string";
+                         $$.str = strdup(value.c_str());
+                         $$.sym = NULL;
+                      } 
                    ;
 ConstFactor        :  yident { /*printf(value.c_str()); printf(" ");*/
 					  Symbol *tVal = table.lookUp(value);
@@ -186,19 +190,96 @@ ConstFactor        :  yident { /*printf(value.c_str()); printf(" ");*/
 						  tVal = sit.getSymbol(value);
 						  if(tVal == NULL) {
 							  cout << "***ERROR: Constant type " << value << " does not exist" << endl;
+							  $$.type = "bad";
+							  $$.sym = new Symbol;
 						  }
 						  else {
 							  newSymbol = tVal;
+							  Constant<int> *iTemp = dynamic_cast<Constant<int>*>(tVal);
+							  if(iTemp != NULL) {
+								$$.type = "integer";
+								$$.str = iTemp->name.c_str();
+								$$.sym = iTemp->type;
+							  }
+							
+							  Constant<double> *dTemp = dynamic_cast<Constant<double>*>(tVal);
+							  if(dTemp != NULL) {
+								$$.type = "real";
+								$$.str = dTemp->name.c_str();
+								$$.sym = dTemp->type;
+							  }
+							
+							  Constant<bool> *bTemp = dynamic_cast<Constant<bool>*>(tVal);
+							  if(bTemp != NULL) {
+								$$.type = "boolean";
+								$$.str = bTemp->name.c_str();
+								$$.sym = bTemp->type;
+							  }
+							
+							  Constant<string> *sTemp = dynamic_cast<Constant<string>*>(tVal);
+							  if(sTemp != NULL) {
+								$$.type = "string";
+								$$.str = sTemp->name.c_str();
+								$$.sym = sTemp->type;
+							  }
+							
+							  Constant<void*> *nTemp = dynamic_cast<Constant<void*>*>(tVal);
+							  if(nTemp != NULL) {
+								$$.type = "pointer";
+								$$.str = nTemp->name.c_str();
+								$$.sym = NULL;
+							  }
+							
+							  if(tVal == NULL) {
+							    $$.type = "bad";
+							    $$.str = "bad";
+							    $$.sym = NULL;
+							  }
 						  }
 					  }
 					  else {
 						  newSymbol = tVal;
 					  }
 					  }
-                   |  ynumber { newSymbol = getNumber(); }
-                   |  ytrue { newSymbol = getTrue(); }
-                   |  yfalse { newSymbol = getFalse(); }
-                   |  ynil { newSymbol = getNil(); }
+                   |  ynumber { newSymbol = getNumber();
+                         Constant<int> *iTemp = dynamic_cast<Constant<int>*>(newSymbol);
+                         if(iTemp != NULL) {
+							$$.type = "integer";
+							$$.str = NULL;
+							$$.sym = iTemp;
+					     }
+					     
+					     Constant<double> *dTemp = dynamic_cast<Constant<double>*>(newSymbol);
+						 if(dTemp != NULL) {
+							$$.type = "real";
+							$$.str = NULL;
+							$$.sym = dTemp;
+					     }
+                      }
+                   |  ytrue { newSymbol = getTrue();
+                         Constant<bool> *bTemp = dynamic_cast<Constant<bool>*>(newSymbol);
+					     if(bTemp != NULL) {
+							$$.type = "boolean";
+							$$.str = NULL;
+							$$.sym = bTemp->type;
+					     }
+                      }
+                   |  yfalse { newSymbol = getFalse();
+                         Constant<bool> *bTemp = dynamic_cast<Constant<bool>*>(newSymbol);
+					     if(bTemp != NULL) {
+							$$.type = "boolean";
+							$$.str = NULL;
+							$$.sym = bTemp->type;
+					     }
+                      }
+                   |  ynil { newSymbol = getNil();
+                         Constant<void*> *nTemp = dynamic_cast<Constant<void*>*>(newSymbol);
+					     if(nTemp != NULL) {
+							$$.type = "pointer";
+							$$.str = NULL;
+							$$.sym = NULL;
+						 }
+                      }
                    ;
 Type               :  yident { symbolName.assign(value);
 					  Type *temp = dynamic_cast<Type*>(table.lookUp(symbolName));
@@ -331,10 +412,14 @@ ElsePart           :  /*** empty ***/
                    ;
 CaseStatement      :  ycase { cout << "switch("; }  
 					  Expression {
-					     if(strcmp($3.type, "integer") /*|| strcmp($3.type, "char")*/) {
-					        cout << "***ERROR: Switch statments can only be controlled by "
-					        << "int and char values" << endl;
-					     }
+					     if(strcmp($3.type, "number") || strcmp($3.type, "char")) {
+							 if($3.str != NULL && strcmp($3.str, "integer")) {
+								cout << "***ERROR: switched cannot be contolled by reals" << endl;
+							 }
+						 }
+						 else {
+							 cout << "***ERROR: switches can only be controlled by chars and ints" << endl;
+						 }
 					     cout << ") ";
 					  } 
 					  yof { cout << " {" << endl; } CaseList  yend { cout << endl << "}"; }
@@ -342,15 +427,80 @@ CaseStatement      :  ycase { cout << "switch("; }
 CaseList           :  Case
                    |  CaseList  ysemicolon  Case  
                    ;
-Case               :  CaseLabelList  ycolon { cout << ": "; } Statement { cout << "break;" << endl; }
+Case               :  CaseLabelList  ycolon { cout << ": " << endl; } 
+					  Statement { cout << endl << "break;" << endl; }
                    ;
 CaseLabelList      :  ConstExpression {
-					     if(strcmp($1.type, "integer") /*|| strcmp($3.type, "char")*/) {
+						 cout << "case ";
+					     if(strcmp($1.type, "integer")) {
 					        cout << "***ERROR: Switch statement, case constant can only be an "
 					        << "int or char value" << endl;
 					     }
+					     else if(!strcmp($1.type, "string") && $1.str[1] != '\0' && $1.sym == NULL) {
+					        cout << "***ERROR: Switch statement, case constant cannot be a string" << endl;
+					     }
+					     else {
+					        if(!strcmp($1.type, "string") && $1.sym == NULL) {
+					           cout << "'" << $1.str << "'";
+					        }
+					        
+					        if(!strcmp($1.type, "string") && $1.sym != NULL) {
+					           Constant<string> *sTemp = static_cast<Constant<string>*>($1.sym);
+					           if(sTemp->value[1] != NULL) {
+					              cout << "***ERROR: Switch statement, case constant cannot be a string" << endl;
+					           }
+					           else {
+					              cout << sTemp->name;
+					           }
+					        }
+					        
+					        if(!strcmp($1.type, "integer")) {
+					           Constant<int> *iTemp = static_cast<Constant<int>*>($1.sym);
+					           if($1.str == NULL) {
+					              cout << iTemp->value;
+					           }
+					           else {
+					              cout << iTemp->name;
+					           }
+					        }
+					     }
 					  } 
-                   |  CaseLabelList  ycomma { cout << ":" << endl; } ConstExpression   
+                   |  CaseLabelList  ycomma { cout << ":" << endl; } ConstExpression {
+						 cout << "case ";
+					     if(strcmp($4.type, "integer")) {
+					        cout << "***ERROR: Switch statement, case constant can only be an "
+					        << "int or char value" << endl;
+					     }
+					     else if(!strcmp($4.type, "string") && $4.str[1] != '\0' && $4.sym == NULL) {
+					        cout << "***ERROR: Switch statement, case constant cannot be a string" << endl;
+					     }
+					     else {
+					        if(!strcmp($4.type, "string") && $4.sym == NULL) {
+					           cout << "'" << $4.str << "'";
+					        }
+					        
+					        if(!strcmp($4.type, "string") && $4.sym != NULL) {
+					           Constant<string> *sTemp = static_cast<Constant<string>*>($4.sym);
+					           if(sTemp->value[1] != NULL) {
+					              cout << "***ERROR: Switch statement, case constant cannot be a string" << endl;
+					           }
+					           else {
+					              cout << sTemp->name;
+					           }
+					        }
+					        
+					        if(!strcmp($4.type, "integer")) {
+					           Constant<int> *iTemp = static_cast<Constant<int>*>($4.sym);
+					           if($4.str == NULL) {
+					              cout << iTemp->value;
+					           }
+					           else {
+					              cout << iTemp->name;
+					           }
+					        }
+					     }
+					     //cout << ":" << endl;
+					  }   
                    ;
 WhileStatement     :  ywhile { cout << "while("; } 
 					  Expression {
@@ -361,7 +511,7 @@ WhileStatement     :  ywhile { cout << "while("; }
 					     cout << ") {";
 					  }  
 					  ydo  
-					  Statement { cout << endl << "}"; }
+					  Statement { cout << endl << "break;" << endl << "}"; }
                    ;
 RepeatStatement    :  yrepeat { cout << "do {"; } 
 					  StatementSequence 
@@ -414,7 +564,7 @@ ForStatement       :  yfor  yident { forControl.assign(value);
 					     }
 					  }
                       ydo 
-                      Statement { cout << "}"; }
+                      Statement { cout << endl << "}"; }
                    ;
 WhichWay           :  yto { $$ = 1; } |  ydownto { $$ = 0; }
                    ;
@@ -423,7 +573,7 @@ IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
                    |  yreadln  yleftparen DesignatorList  yrightparen 
                    |  ywrite { lSeperator = "<<"; cout << "cout << "; } 
                       yleftparen  ExpList  yrightparen
-                   |  ywriteln { cout << "cout << endl" << endl; }
+                   |  ywriteln { cout << "cout << endl"; }
                    |  ywriteln { lSeperator = "<<"; cout << "cout << "; } 
                       yleftparen  ExpList  yrightparen
                    ;

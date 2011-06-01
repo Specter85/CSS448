@@ -183,10 +183,10 @@ void outputConst(Symbol *rhs, int level) {
 	if(bTemp != NULL) {
 		cout << "const bool " << bTemp->name << " = ";
 		if(bTemp->value) {
-			cout << "true;" << endl;
+			cout << "true;";
 		}
 		else {
-			cout << "false;" << endl;
+			cout << "false;";
 		}
 		return;
 	}
@@ -194,21 +194,21 @@ void outputConst(Symbol *rhs, int level) {
 	// If the Symbol is of type integer output a C++ int defintion for it.
 	Constant<int> *iTemp = dynamic_cast<Constant<int>*>(rhs);
 	if(iTemp != NULL) {
-		cout << "const int " << iTemp->name << " = " << iTemp->value << ";" << endl;
+		cout << "const int " << iTemp->name << " = " << iTemp->value << ";";
 		return;
 	}
 
 	// If the Symbol is of type real output a C++ double defintion for it.
 	Constant<double> *dTemp = dynamic_cast<Constant<double>*>(rhs);
 	if(dTemp != NULL) {
-		cout << "const double " << dTemp->name << " = " << dTemp->value << ";" << endl;
+		cout << "const double " << dTemp->name << " = " << dTemp->value << ";";
 		return;
 	}
 
 	// If the Symbol is of type string output a C++ c-string defintion for it.
 	Constant<string> *sTemp = dynamic_cast<Constant<string>*>(rhs);
 	if(sTemp != NULL) {
-		cout << "const char " << sTemp->name << "[] = \"" << sTemp->value << "\";" << endl;
+		cout << "const char " << sTemp->name << "[] = \"" << sTemp->value << "\";";
 		return;
 	}
 }
