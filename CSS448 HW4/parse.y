@@ -52,6 +52,11 @@ SimpleType pParam("pParam");
 
 string lSeperator;
 
+struct tNode {
+   Symbol *sym;
+   tNode *next;
+};
+
 %}
 
 /* definition section */
@@ -65,6 +70,7 @@ string lSeperator;
 	   const char *str;
 	   int num;
 	   void *sym;
+	   void *list;
 	} cur;
 }
 
@@ -81,7 +87,7 @@ string lSeperator;
 %type <cur> DesignatorList Designator DesignatorStuff theDesignatorStuff
 		SimpleExpression Expression TermExpr Term Factor Setvalue
 		FunctionCall MultOperator UnaryOperator AddOperator Relation
-		ExpList ConstFactor ConstExpression
+		ExpList ConstFactor ConstExpression ActualParameters
 		
 %type <ival> WhichWay
 
@@ -394,8 +400,42 @@ Assignment         :  Designator yassign { cout << " = "; }
 					     }
 					  }/* maybe allow subprocedure call here? */
                    ;
-ProcedureCall      :  yident { printf(value.c_str()); printf(" "); }
-                   |  yident { printf(value.c_str()); printf(" "); } ActualParameters
+ProcedureCall      :  yident { 
+                         ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp(value));
+                         if(pTemp != NULL) {
+                            cout << value << "()"; 
+                         }
+                         else {
+                            cout << "***ERROR: " << value
+                            << " is not a subprocedure" << endl;
+                         }
+                      }
+                   |  yident { 
+                         ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp(value));
+                         if(pTemp != NULL) {
+                            cout << value << "("; 
+                         }
+                         else {
+                            cout << "***ERROR: " << value
+                            << " is not a subprocedure" << endl;
+                         }
+                         
+                         $1.type = strdup(value.c_str());
+                      } 
+                      ActualParameters {
+                         ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp($1.type));
+                         free($1.type);
+                         
+                         tNode *tTemp = static_cast<tNode*>($3.list);
+                         
+                         for(int i = pTemp->params.size() - 1; i >= 0; i--, tTemp = tTemp->next) {
+                            if(pTemp->params[i]->type->name != tTemp->sym->name) {
+                               cout << "***ERROR: invalid parameter";
+                            }
+                         }
+                         
+                         cout << ")";
+                      }
                    ;
 IfStatement        :  yif { cout << "if("; }
 					  Expression {
@@ -432,7 +472,7 @@ Case               :  CaseLabelList  ycolon { cout << ": " << endl; }
                    ;
 CaseLabelList      :  ConstExpression {
 						 cout << "case ";
-					     if(strcmp($1.type, "integer")) {
+					     if(strcmp($1.type, "integer") && strcmp($1.type, "string")) {
 					        cout << "***ERROR: Switch statement, case constant can only be an "
 					        << "int or char value" << endl;
 					     }
@@ -467,7 +507,7 @@ CaseLabelList      :  ConstExpression {
 					  } 
                    |  CaseLabelList  ycomma { cout << ":" << endl; } ConstExpression {
 						 cout << "case ";
-					     if(strcmp($4.type, "integer")) {
+					     if(strcmp($4.type, "integer") && strcmp($4.type, "string")) {
 					        cout << "***ERROR: Switch statement, case constant can only be an "
 					        << "int or char value" << endl;
 					     }
@@ -628,6 +668,13 @@ Designator         :  yident { cout << value.c_str();
 								$$.sym = vTemp->type;
 							}
 							
+							ProcFunc *fTemp = dynamic_cast<ProcFunc*>(temp);
+							if(fTemp != NULL) {
+							   $$.type = "func";
+							   $$.str = fTemp->type->name.c_str();
+							   $$.sym = fTemp->type;
+							}
+							
 							Constant<int> *iTemp = dynamic_cast<Constant<int>*>(temp);
 							if(iTemp != NULL) {
 								$$.type = "const";
@@ -754,15 +801,26 @@ theDesignatorStuff :  ydot yident {
                       $$.type = "arrayindex"; }
                    |  ycaret { cout << "->"; $$.type = "pointer"; }
                    ;
-ActualParameters   :  yleftparen  ExpList  yrightparen
+ActualParameters   :  yleftparen { lSeperator = ", "; } ExpList  yrightparen { $$.list = $3.list; }
                    ;
 ExpList            :  Expression { 
+					     tNode *temp = new tNode;
+					     temp->next = NULL;
+					     temp->sym = static_cast<Symbol*>($1.sym);
+					     
 					     $$.type = $1.type;
 					     $$.sym = $1.sym;
+					     $$.list = temp;
 					  }
                    |  ExpList  ycomma { cout << lSeperator; } Expression {
+                         tNode *temp = new tNode;
+					     temp->sym = static_cast<Symbol*>($4.sym);
+					     tNode *pTemp = static_cast<tNode*>($1.list);
+					     temp->next = pTemp;
+					     
                          $$.type = $1.type;
-                         $$.sym = $1.type;
+                         $$.sym = $1.sym;
+                         $$.list = temp;
                       }     
                    ;
 MemoryStatement    :  ynew  yleftparen  yident { 
@@ -880,28 +938,32 @@ Factor             :  ynumber {
 					     if(dTemp != NULL) {
 					        $$.str = dTemp->type->name.c_str();
 					     }
-					     delete temp;
 					     $$.type = "number";
+					     $$.sym = temp;
 					  }
                    |  ytrue {
+                         Symbol *temp = getTrue();
                          cout << "true";
                          $$.type = "bool";
-                         $$.sym = NULL;
+                         $$.sym = temp;
                       }
                    |  yfalse {
+                         Symbol *temp = getFalse();
                          cout << "false";
                          $$.type = "bool";
-                         $$.sym = NULL;
+                         $$.sym = temp;
                       }
                    |  ynil {
+                         Symbol *temp = getNil();
                          cout << "NULL";
                          $$.type = "pointer";
-                         $$.sym = NULL;
+                         $$.sym = temp;
                       }
                    |  ystring {
+                         Symbol *temp = getString();
                          cout << "\"" << value << "\"";
                          $$.type = "string";
-                         $$.sym = NULL;
+                         $$.sym = temp;
                       }
                    |  Designator { 
                          $$.type = $1.type;
