@@ -11,6 +11,16 @@
 #include "variable.h"
 #include "arraytype.h"
 
+struct PComp {
+	bool isPointer;
+	string type;
+};
+
+bool cmpPtrs(PComp rhs1, PComp rhs2);
+
+// Function for determining if a nonterminal is a pointer.
+PComp isPointer(std::string rhs, void *sym);
+
 // Function for determining if a nonterminal is a number.
 // Allows ints, reals, and bools.
 bool isNumber(std::string rhs, void *sym);

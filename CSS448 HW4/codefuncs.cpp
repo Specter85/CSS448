@@ -21,6 +21,40 @@ extern list<Type*> typeList;
 
 extern int gLevel;
 
+bool cmpPtrs(PComp rhs1, PComp rhs2) {
+	if(!rhs1.isPointer || !rhs2.isPointer) {
+		return false;
+	}
+
+	if(rhs1.type == "NULL" || rhs2.type == "NULL") {
+		return true;
+	}
+
+	return rhs1.type == rhs2.type;
+}
+
+PComp isPointer(string rhs, void *sym) {
+	PComp retVal;
+	retVal.isPointer = false;
+	retVal.type = "bad";
+
+	Symbol *temp = static_cast<Symbol*>(sym);
+
+	Constant<void*> *nTemp = dynamic_cast<Constant<void*>*>(temp);
+	if(nTemp != NULL) {
+		retVal.isPointer = true;
+		retVal.type = "NULL";
+	}
+
+	PointerType *pTemp = dynamic_cast<PointerType*>(temp);
+	if(pTemp != NULL) {
+		retVal.isPointer = true;
+		retVal.type = pTemp->typeTo->name.c_str();
+	}
+
+	return retVal;
+}
+
 bool isBool(std::string rhs, void *sym) {
 	if(rhs == "bool") {
 		return true;

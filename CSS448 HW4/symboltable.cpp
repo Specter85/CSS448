@@ -155,6 +155,11 @@ Symbol *SymbolTable::lookUpCS(const std::string &rhs) {
 		current = current->next;
 	}
 
+	ProcFunc *pTemp = dynamic_cast<ProcFunc*>(currentScope);
+	if(pTemp != NULL && pTemp->name == rhs && pTemp->type != NULL) {
+		return pTemp;
+	}
+
 	Symbol *toReturn = currentScope->idents.retrieve(temp);
 	return (toReturn != NULL && toReturn->valid) ? toReturn : NULL;
 }

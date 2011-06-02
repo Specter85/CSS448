@@ -4,6 +4,6 @@ extern int yyparse();
 
 int main() {
    int result = yyparse();
-   table.printST();
+   //table.printST();
    return result;
 }

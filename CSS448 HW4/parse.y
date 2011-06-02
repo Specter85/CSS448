@@ -149,7 +149,7 @@ ConstantDef        :  yident { symbolName.assign(value); } yequal  ConstExpressi
 				      outputConst(newSymbol, table.getScopeLevel());
 				      newSymbol = NULL; }
                    ;
-TypeDef            :  yident { printf(value.c_str()); printf(" "); symbolName.assign(value);
+TypeDef            :  yident { symbolName.assign(value);
 					  typeName.assign(value); } yequal  Type 
 					  {
 					  if(currentType->name != "") {
@@ -389,6 +389,8 @@ Assignment         :  Designator yassign { cout << " = "; }
 						 }
 						 else if((temp1->name == "boolean") && isBool($4.type, $4.sym)) {
 						 }
+						 else if(cmpPtrs(isPointer($1.type, $1.sym), isPointer($4.type, $4.sym))) {
+					     }
 					     else if($4.sym != NULL) {
 					        Symbol *temp2 = static_cast<Symbol*>($4.sym);
 					        if(temp1->name != temp2->name) {
@@ -624,11 +626,15 @@ DesignatorList     :  Designator
                    |  DesignatorList  ycomma  Designator 
                    ;
 Designator         :  yident { cout << value.c_str(); 
-					     Variable *var = dynamic_cast<Variable*>(table.lookUp(value));
 						 Symbol *temp = table.lookUp(value);
+					     Variable *var = dynamic_cast<Variable*>(temp);
+					     ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUpCS(value));
 					     if(var != NULL) {
 							currentBase = var;
 					     }
+					     else if(pTemp != NULL) {
+							currentBase = pTemp;
+						 }
 					     else if(temp != NULL && temp->isConst) {
 							currentBase = temp;
 					     }
@@ -666,6 +672,13 @@ Designator         :  yident { cout << value.c_str();
 								$$.type = "var";
 								$$.str = vTemp->type->name.c_str();
 								$$.sym = vTemp->type;
+							}
+							
+							ProcFunc *proTemp = dynamic_cast<ProcFunc*>(table.lookUpCS(value));
+							if(proTemp != NULL) {
+							   $$.type = "func";
+							   $$.str = proTemp->type->name.c_str();
+							   $$.sym = proTemp->type;
 							}
 							
 							ProcFunc *fTemp = dynamic_cast<ProcFunc*>(temp);
@@ -858,8 +871,9 @@ Expression         :  SimpleExpression  {
                          $$.sym = $1.sym;
                       } 
                    |  SimpleExpression  Relation  SimpleExpression {
-                         if(!(isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
-							cout << "***ERROR: relations can contain only numbers" << endl;
+                         if(!(isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym)) &&
+                         !cmpPtrs(isPointer($1.type, $1.sym), isPointer($3.type, $3.sym))) {
+							cout << "***ERROR: relations can contain only numbers or pointers" << endl;
                          }
                          $$.type = "bool";
                          $$.str = "bool";
@@ -869,6 +883,7 @@ Expression         :  SimpleExpression  {
 SimpleExpression   :  TermExpr { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
                    |  UnaryOperator  TermExpr {
                          if(!isNumber($2.type, $2.sym)) {
@@ -878,11 +893,13 @@ SimpleExpression   :  TermExpr {
                          }
                          $$.type = $2.type;
                          $$.sym = $2.sym;
+                         $$.str = $2.str;
                       }
                    ;
 TermExpr           :  Term  { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       } 
                    |  TermExpr  AddOperator  Term {
                          if((isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
@@ -898,13 +915,16 @@ TermExpr           :  Term  {
                          }
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
                    ;
 Term               :  Factor  { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       } 
                    |  Term  MultOperator  Factor {
+						 Symbol *temp = static_cast<Symbol*>($3.sym);
                          if((isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym))) {
                             if((!strcmp($2.type, "int")) && (!(string($1.str) == "integer") ||
                             !(string($3.str) == "integer"))) {
@@ -925,6 +945,7 @@ Term               :  Factor  {
                          }
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
                    ;
 Factor             :  ynumber {
@@ -968,29 +989,64 @@ Factor             :  ynumber {
                    |  Designator { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
-                   |  yleftparen  Expression  yrightparen {
-                         $$.type = $2.type;
-                         $$.sym = $2.type;
+                   |  yleftparen { cout << "("; } Expression  yrightparen {
+						 cout << ")";
+                         $$.type = $3.type;
+                         $$.sym = $3.sym;
+                         $$.str = $3.str;
                       }
                    |  ynot { cout << "!"; } Factor {
                          $$.type = $3.type;
                          $$.sym = $3.sym;
+                         $$.str = $3.str;
                       }
                    |  Setvalue {
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
                    |  FunctionCall {
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       }
                    ;
 /*  Functions with no parameters have no parens, but you don't need         */
 /*  to handle that in FunctionCall because it is handled by Designator.     */
 /*  A FunctionCall has at least one parameter in parens, more are           */
 /*  separated with commas.                                                  */
-FunctionCall       :  yident { printf(value.c_str()); printf(" "); } ActualParameters
+FunctionCall       :  yident { 
+                         ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp(value));
+                         if(pTemp != NULL) {
+                            cout << value << "()"; 
+                            $$.type = "var";
+                            $$.str = pTemp->type->name.c_str();
+                            $$.sym = pTemp->type;
+                         }
+                         else {
+                            cout << "***ERROR: " << value
+                            << " is not a function" << endl;
+                            $$.type = "bad";
+                            $$.str = "bad";
+                            $$.sym = new Symbol;
+                         }
+                      }
+                      ActualParameters {
+                         ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp($1.type));
+                         free($1.type);
+                         
+                         tNode *tTemp = static_cast<tNode*>($3.list);
+                         
+                         for(int i = pTemp->params.size() - 1; i >= 0; i--, tTemp = tTemp->next) {
+                            if(pTemp->params[i]->type->name != tTemp->sym->name) {
+                               cout << "***ERROR: invalid parameter";
+                            }
+                         }
+                         
+                         cout << ")";
+                      }
 					  /* you finish it, Expressions are valid parameters */
                    ;
 Setvalue           :  yleftbracket ElementList  yrightbracket
