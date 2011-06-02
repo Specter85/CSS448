@@ -389,7 +389,8 @@ Assignment         :  Designator yassign { cout << " = "; }
 						 }
 						 else if((temp1->name == "boolean") && isBool($4.type, $4.sym)) {
 						 }
-						 else if(cmpPtrs(isPointer($1.type, $1.sym), isPointer($4.type, $4.sym))) {
+						 else if(cmpPtrs(isPointer($1.type, $1.sym), isPointer($4.type, $4.sym))
+						 && isPointer($1.type, $1.sym).type != "NULL") {
 					     }
 					     else if($4.sym != NULL) {
 					        Symbol *temp2 = static_cast<Symbol*>($4.sym);
@@ -450,7 +451,19 @@ IfStatement        :  yif { cout << "if("; }
 					  ythen { cout << " {"; } Statement { cout << endl << "}"; } ElsePart
                    ;
 ElsePart           :  /*** empty ***/
-                   |  yelse { cout << "else"; } Statement
+                   |  yelse { cout << "else "; } IfStatement
+                   |  yelse { cout << "else {";} ElseStatement { cout << endl << "}"; }
+                   ;
+ElseStatement      :  Assignment { cout << ";"; }
+                   |  ProcedureCall { cout << ";"; }
+                   |  CaseStatement
+                   |  WhileStatement
+                   |  RepeatStatement
+                   |  ForStatement
+                   |  IOStatement { cout << ";"; }
+                   |  MemoryStatement { cout << ";"; }
+                   |  ybegin StatementSequence yend
+                   |  /*** empty ***/
                    ;
 CaseStatement      :  ycase { cout << "switch("; }  
 					  Expression {
@@ -553,7 +566,7 @@ WhileStatement     :  ywhile { cout << "while("; }
 					     cout << ") {";
 					  }  
 					  ydo  
-					  Statement { cout << endl << "break;" << endl << "}"; }
+					  Statement { cout << endl << "}"; }
                    ;
 RepeatStatement    :  yrepeat { cout << "do {"; } 
 					  StatementSequence 
