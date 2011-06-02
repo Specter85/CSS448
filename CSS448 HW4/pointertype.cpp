@@ -14,7 +14,7 @@ void PointerType::display(int indent)const {
 	if(valid) {
 		// Output a number of tabs equivalent to indent.
 		for(int i = 0; i < indent; i++) {
-			cout << "\t";
+			cout << "   ";
 		}
 
 		// If typeTo exists and is valid output the pointer type's name

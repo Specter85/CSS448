@@ -27,7 +27,7 @@ ArrayType::~ArrayType() {
 void ArrayType::display(int indent)const {
 	// Outout a number of indents coresponding to the current scope.
 	for(int i = 0; i < indent; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Output the name of the array and all but the last dimension's range

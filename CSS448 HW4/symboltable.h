@@ -57,6 +57,8 @@ public:
 	// Function for getting Scope level.
 	int getScopeLevel()const;
 
+	string getScopeName()const;
+
 	// function for outputing the current object.
 	void printST();
 

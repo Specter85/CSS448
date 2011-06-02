@@ -19,7 +19,7 @@ SetType::~SetType() {
 void SetType::display(int indent)const {
 	// Output a number of tabs equivalent to indent.
 	for(int i = 0; i < indent; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Display the name and range of the set type.

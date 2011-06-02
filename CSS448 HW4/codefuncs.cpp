@@ -92,7 +92,7 @@ bool isNumber(std::string rhs, void *sym) {
 // parameter variable. Otherwise, pass by value.
 void outputFunctionHeader(ProcFunc *rhs, int level) {
 	for(int i = 0; i < level; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Determine and output the functions return type.
@@ -118,7 +118,7 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 			cout << current->name << "," << endl;
 
 			for(int j = 0; j < level + 1; j++) {
-				cout << "\t";
+				cout << "   ";
 			}
 		}
 		// Output the last parameter.
@@ -133,6 +133,15 @@ void outputFunctionHeader(ProcFunc *rhs, int level) {
 	}
 
 	cout << ") {" << endl;
+
+	if(rhs->type != NULL) {
+		for(int i = 0; i < gLevel; i++) {
+			cout << "   ";
+		}
+
+		// Make return var for the function.
+		cout << getFinalTypeName(rhs->type) << " ret_" << rhs->name << ";";
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -148,7 +157,7 @@ void outputTypes(int level) {
 
 		if(type->valid) {
 			for(int i = 0; i < level; i++) {
-				cout << "\t";
+				cout << "   ";
 			}
 			
 			// If the Type is of type ArrayType output a C++ array typedef defintion for it.
@@ -181,6 +190,7 @@ void outputTypes(int level) {
 			// If the Type is of type PointerType output a C++ pointer typedef defintion for it.
 			PointerType *pType = dynamic_cast<PointerType*>(type);
 			if(pType != NULL) {
+				cout << "struct " << getFinalTypeName(pType->typeTo) << ";" << endl;
 				cout << "typedef " << getFinalTypeName(pType->typeTo) 
 					<< " *" << pType->name << ";" << endl;
 				continue;
@@ -209,7 +219,7 @@ void outputTypes(int level) {
 void outputConst(Symbol *rhs, int level) {
 	// Output the number of tabs in the scope level.
 	for(int i = 0; i < level; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// If the Symbol is of type boolean output a C++ bool definition for it.
@@ -256,7 +266,7 @@ void outputConst(Symbol *rhs, int level) {
 void outputVar(Variable *rhs, int level) {
 	// Output the number of tabs in the scope level.
 	for(int i = 0; i < level; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Get the name of the final C++ type.

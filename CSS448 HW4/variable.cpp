@@ -24,7 +24,7 @@ Variable::~Variable() {
 void Variable::display(int indent)const {
 	// Output a number of tabs equivalent to indent.
 	for(int i = 0; i < indent; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// If the variable is not a refrence don't output var.

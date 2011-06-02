@@ -49,7 +49,7 @@ template <class TYPE>
 void Constant<TYPE>::display(int indent)const {
 	// Outout a number of indents coresponding to the current scope.
 	for(int i = 0; i < indent; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Output the name of the current object and its value.

@@ -114,10 +114,20 @@ IdentList          :  yident { identStack.push(value); }
 /**************************  Declarations section ***************************/
 
 ProgBlock          :  Declarations  ybegin { cout << "int main() {" << endl; }
-					  StatementSequence  yend { cout << endl << "}"; }
+					  StatementSequence /*{
+					     cout << endl;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  }*/ yend { cout << endl << "}"; }
                    ;
 Block              :  Declarations  ybegin 
-					  StatementSequence  yend
+					  StatementSequence /*{
+					     cout << endl;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  }*/ yend
                    ;
 Declarations       :  ConstantDefBlock              /* you do this one */
                       TypeDefBlock
@@ -366,7 +376,12 @@ FieldList          :  IdentList  ycolon  Type { addRecordVars(); }
 
 StatementSequence  :  Statement
                    |  StatementSequence  
-                      ysemicolon 
+                      ysemicolon  /*{
+					     cout << endl;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  }*/
                       Statement
                    ;
 Statement          :  Assignment { cout << ";"; }
@@ -623,14 +638,24 @@ ForStatement       :  yfor  yident { forControl.assign(value);
                    ;
 WhichWay           :  yto { $$ = 1; } |  ydownto { $$ = 0; }
                    ;
-IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
-                   |  yreadln  
-                   |  yreadln  yleftparen DesignatorList  yrightparen 
-                   |  ywrite { lSeperator = "<<"; cout << "cout << "; } 
+IOStatement        :  yread { lSeperator = " >> "; cout << "cin >> "; } 
+					  yleftparen  DesignatorList  yrightparen
+                   |  yreadln {
+                         char buf[400];
+                         cin.getline(buf, 399);
+                      }
+                   |  yreadln { lSeperator = " >> "; cout << "cin >> "; }
+                      yleftparen DesignatorList  yrightparen {
+                         char buf[400];
+                         cin.getline(buf, 399);
+                      }
+                   |  ywrite { lSeperator = " << "; cout << "cout << "; } 
                       yleftparen  ExpList  yrightparen
                    |  ywriteln { cout << "cout << endl"; }
-                   |  ywriteln { lSeperator = "<<"; cout << "cout << "; } 
-                      yleftparen  ExpList  yrightparen
+                   |  ywriteln { lSeperator = " << "; cout << "cout << "; } 
+                      yleftparen  ExpList  yrightparen {
+					     cout << " << endl";
+                      }
                    ;
 
 /***************************  Designator Stuff  ******************************/
@@ -638,18 +663,21 @@ IOStatement        :  yread  yleftparen  DesignatorList  yrightparen
 DesignatorList     :  Designator  
                    |  DesignatorList  ycomma  Designator 
                    ;
-Designator         :  yident { cout << value.c_str(); 
+Designator         :  yident { 
 						 Symbol *temp = table.lookUp(value);
 					     Variable *var = dynamic_cast<Variable*>(temp);
 					     ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUpCS(value));
 					     if(var != NULL) {
 							currentBase = var;
+							cout << value.c_str(); 
 					     }
 					     else if(pTemp != NULL) {
 							currentBase = pTemp;
+							cout << "ret_" << value.c_str();
 						 }
 					     else if(temp != NULL && temp->isConst) {
 							currentBase = temp;
+							cout << value.c_str(); 
 					     }
 					     else {
 							Symbol *temp = new Symbol;
@@ -659,7 +687,14 @@ Designator         :  yident { cout << value.c_str();
 					     $1.type = strdup(value.c_str());
 					  } DesignatorStuff {
 					     if(!strcmp($3.type, "array")) {
-					        Variable *var = dynamic_cast<Variable*>(table.lookUp($1.type));
+					        Variable *var;
+					        if($3.sym == NULL) {
+					           var = dynamic_cast<Variable*>(table.lookUp($1.type));
+					        }
+					        else {
+					           Symbol *temp = static_cast<Symbol*>($3.sym);
+					           var = dynamic_cast<Variable*>(temp);
+					        }
 					        ArrayType *arr = dynamic_cast<ArrayType*>(var->type);
 					        if(arr != NULL) {
 								if(arr->numDim != $3.num) {
@@ -762,6 +797,10 @@ DesignatorStuff    :  /*** empty ***/ {
 								else if(!strcmp($1.type, "empty")) {
 								   $$.type = "array"; $$.num = 1;
 								}
+								else if(!strcmp($1.type, "element")) {
+								   $$.type = "array"; $$.num = 1;
+								   $$.sym = $1.sym;
+								}
 							}
 					     }
 					     else if(!strcmp($2.type, "element")) {
@@ -855,9 +894,9 @@ MemoryStatement    :  ynew  yleftparen  yident {
 					     PointerType *type = dynamic_cast<PointerType*>(var->type);
 					     if(type != NULL) {
 					        for(int i = 0; i < gLevel; i++) {
-							   cout << "\t";
+							   cout << "   ";
 							}
-					        cout << var->name << " = new " << getFinalTypeName(type->typeTo) << ";" << endl;
+					        cout << var->name << " = new " << getFinalTypeName(type->typeTo);
 					     }
 					  } 
 					  }
@@ -868,9 +907,9 @@ MemoryStatement    :  ynew  yleftparen  yident {
 					     PointerType *type = dynamic_cast<PointerType*>(var->type);
 					     if(type != NULL) {
 					        for(int i = 0; i < gLevel; i++) {
-							   cout << "\t";
+							   cout << "   ";
 							}
-					        cout << "delete " << var->name << ";" << endl;
+					        cout << "delete " << var->name;
 					     }
 					  } 
 					  }
@@ -1033,7 +1072,7 @@ Factor             :  ynumber {
 FunctionCall       :  yident { 
                          ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp(value));
                          if(pTemp != NULL) {
-                            cout << value << "()"; 
+                            cout << value << "("; 
                             $$.type = "var";
                             $$.str = pTemp->type->name.c_str();
                             $$.sym = pTemp->type;
@@ -1078,16 +1117,25 @@ SubprogDeclList    :  /*** empty ***/
                    |  SubprogDeclList ProcedureDecl ysemicolon  
                    |  SubprogDeclList FunctionDecl ysemicolon
                    ;
-ProcedureDecl      :  ProcedureHeading  { addScope(); } ysemicolon  Block { 
+ProcedureDecl      :  ProcedureHeading  { addScope(); } ysemicolon 
+					  Block { 
 					  table.exitScope();
 					  for(int i = 0; i < table.getScopeLevel(); i++) {
-					     cout << "\t";
+					     cout << "   ";
 					  }
 					  gLevel--;
 					  cout << "}" << endl; }
                    ;
 FunctionDecl       :  FunctionHeading  ycolon  yident { addScope(true); } 
-					  ysemicolon  Block { table.exitScope(); gLevel--; }
+					  ysemicolon  Block { 
+					     for(int i = 0; i < gLevel; i++) {
+					        cout << "   ";
+					     }
+					     Symbol *temp = table.lookUpCS(table.getScopeName());
+					     cout << "return ret_" << temp->name << ";" << endl;
+					     cout << "}";
+					     table.exitScope(); gLevel--; 
+					  }
                    ;
 ProcedureHeading   :  yprocedure  yident { scopeName.assign(value); } 
                    |  yprocedure  yident { scopeName.assign(value); 

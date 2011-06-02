@@ -191,6 +191,18 @@ int SymbolTable::getScopeLevel()const {
 }
 
 //------------------------------------------------------------------------------
+// getScopeName
+string SymbolTable::getScopeName()const {
+	ProcFunc *temp = dynamic_cast<ProcFunc*>(currentScope);
+	if(temp != NULL) {
+		return temp->name;
+	}
+	else {
+		return string("bad");
+	}
+}
+
+//------------------------------------------------------------------------------
 // printST
 // Function for printing the current object.
 void SymbolTable::printST() {

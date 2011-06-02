@@ -33,7 +33,7 @@ Variable *RecordType::getMember(string name) {
 void RecordType::display(int indent)const {
 	// Output a number of tabs equivalent to indent.
 	for(int i = 0; i < indent; i++) {
-		cout << "\t";
+		cout << "   ";
 	}
 
 	// Output the name of the current object and all its variables.
