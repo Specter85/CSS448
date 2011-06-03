@@ -19,28 +19,8 @@ using namespace std;
 // List for holding onto types before they are output.
 extern list<Type*> typeList;
 
-// The Scope/Indent Level
 extern int gLevel;
 
-void getArrayInfo(int &numDim, Symbol *&type, ArrayType *rhs) {
-	numDim = 0;
-	type = NULL;
-	ArrayType *arr = rhs;
-	for(;;) {
-		numDim += arr->numDim;
-
-		ArrayType *aTemp = dynamic_cast<ArrayType*>(arr->type);
-		if(aTemp != NULL) {
-			arr = aTemp;
-		}
-		else {
-			type = arr->type;
-			break;
-		}
-	}
-}
-
-// Function for comparing two pointers.
 bool cmpPtrs(PComp rhs1, PComp rhs2) {
 	if(!rhs1.isPointer || !rhs2.isPointer) {
 		return false;
@@ -53,7 +33,6 @@ bool cmpPtrs(PComp rhs1, PComp rhs2) {
 	return rhs1.type == rhs2.type;
 }
 
-// Function for determining if a nonterminal is a pointer.
 PComp isPointer(string rhs, void *sym) {
 	PComp retVal;
 	retVal.isPointer = false;
@@ -76,7 +55,6 @@ PComp isPointer(string rhs, void *sym) {
 	return retVal;
 }
 
-// Function for determining if a nonterminal is a bool.
 bool isBool(std::string rhs, void *sym) {
 	if(rhs == "bool") {
 		return true;
@@ -90,8 +68,6 @@ bool isBool(std::string rhs, void *sym) {
 	return false;
 }
 
-// Function for determining if a nonterminal is a number.
-// Allows ints, reals, and bools.
 bool isNumber(std::string rhs, void *sym) {
 	if(rhs == "number" || rhs == "bool") {
 		return true;
@@ -242,7 +218,7 @@ void outputTypes(int level) {
 // if the parameter Symbol is of type bool, int, double, or char.
 void outputConst(Symbol *rhs, int level) {
 	// Output the number of tabs in the scope level.
-	for(int i = 0; i < gLevel; i++) {
+	for(int i = 0; i < level; i++) {
 		cout << "   ";
 	}
 
@@ -289,7 +265,7 @@ void outputConst(Symbol *rhs, int level) {
 // a single/standard variable with a type.
 void outputVar(Variable *rhs, int level) {
 	// Output the number of tabs in the scope level.
-	for(int i = 0; i < gLevel; i++) {
+	for(int i = 0; i < level; i++) {
 		cout << "   ";
 	}
 
