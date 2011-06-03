@@ -19,7 +19,6 @@
 
 using namespace std;
 
-// The Scope/Indent Level
 extern int gLevel;
 
 // The symbol table.

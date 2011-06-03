@@ -58,7 +58,7 @@ PComp isPointer(string rhs, void *sym) {
 	return retVal;
 }
 
-// Function for determining if a nonterminal is a bool.
+// TODO: ...
 bool isBool(std::string rhs, void *sym) {
 	if(rhs == "bool") {
 		return true;
@@ -72,8 +72,7 @@ bool isBool(std::string rhs, void *sym) {
 	return false;
 }
 
-// Function for determining if a nonterminal is a number.
-// Allows ints, reals, and bools.
+// TODO: ...
 bool isNumber(std::string rhs, void *sym) {
 	if(rhs == "number" || rhs == "bool") {
 		return true;

@@ -35,6 +35,7 @@ Symbol *currentBase = NULL;
 stack<string> identStack;
 stack<ArrayType*> arrayStack;
 list<Variable*> variableStack;
+
 // Stack of unfinished pointers.
 list<umfPointer> pointerStack;
 

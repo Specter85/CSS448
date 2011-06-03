@@ -22,7 +22,6 @@ extern list<Type*> typeList;
 // The Scope/Indent Level
 extern int gLevel;
 
-// Function for comparing two pointers.
 bool cmpPtrs(PComp rhs1, PComp rhs2) {
 	if(!rhs1.isPointer || !rhs2.isPointer) {
 		return false;
@@ -35,7 +34,7 @@ bool cmpPtrs(PComp rhs1, PComp rhs2) {
 	return rhs1.type == rhs2.type;
 }
 
-// Function for determining if a nonterminal is a pointer.
+// TODO: ...
 PComp isPointer(string rhs, void *sym) {
 	PComp retVal;
 	retVal.isPointer = false;
@@ -58,7 +57,7 @@ PComp isPointer(string rhs, void *sym) {
 	return retVal;
 }
 
-// Function for determining if a nonterminal is a bool.
+// TODO: ...
 bool isBool(std::string rhs, void *sym) {
 	if(rhs == "bool") {
 		return true;
@@ -72,8 +71,6 @@ bool isBool(std::string rhs, void *sym) {
 	return false;
 }
 
-// Function for determining if a nonterminal is a number.
-// Allows ints, reals, and bools.
 bool isNumber(std::string rhs, void *sym) {
 	if(rhs == "number" || rhs == "bool") {
 		return true;

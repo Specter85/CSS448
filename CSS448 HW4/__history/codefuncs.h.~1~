@@ -11,13 +11,11 @@
 #include "variable.h"
 #include "arraytype.h"
 
-// Structure to use nonterminal pointers.
 struct PComp {
 	bool isPointer;
 	string type;
 };
 
-// Function for comparing two pointers.
 bool cmpPtrs(PComp rhs1, PComp rhs2);
 
 // Function for determining if a nonterminal is a pointer.

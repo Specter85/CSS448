@@ -11,7 +11,7 @@
 #include "variable.h"
 #include "arraytype.h"
 
-// Structure to use nonterminal pointers.
+// Structure to enable
 struct PComp {
 	bool isPointer;
 	string type;
