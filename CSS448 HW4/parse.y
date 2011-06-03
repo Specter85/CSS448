@@ -416,6 +416,7 @@ Assignment         :  Designator yassign { cout << " = "; }
 					     else {
 					        cout << "***ERROR: type mismatch" << endl;
 					     }
+
 					  }/* maybe allow subprocedure call here? */
                    ;
 ProcedureCall      :  yident { 
@@ -722,7 +723,7 @@ Designator         :  yident {
 								$$.sym = vTemp->type;
 							}
 							
-							ProcFunc *proTemp = dynamic_cast<ProcFunc*>(table.lookUpCS(value));
+							ProcFunc *proTemp = dynamic_cast<ProcFunc*>(table.lookUpCS($1.type));
 							if(proTemp != NULL) {
 							   $$.type = "func";
 							   $$.str = proTemp->type->name.c_str();
@@ -921,6 +922,7 @@ MemoryStatement    :  ynew  yleftparen  yident {
 Expression         :  SimpleExpression  { 
                          $$.type = $1.type;
                          $$.sym = $1.sym;
+                         $$.str = $1.str;
                       } 
                    |  SimpleExpression  Relation  SimpleExpression {
                          if(!(isNumber($1.type, $1.sym) && isNumber($3.type, $3.sym)) &&
@@ -1071,31 +1073,47 @@ Factor             :  ynumber {
 /*  separated with commas.                                                  */
 FunctionCall       :  yident { 
                          ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp(value));
+                         $1.type = strdup(value.c_str());
                          if(pTemp != NULL) {
                             cout << value << "("; 
-                            $$.type = "var";
-                            $$.str = pTemp->type->name.c_str();
-                            $$.sym = pTemp->type;
+                            //$1.type = "var";
+                            $1.str = pTemp->type->name.c_str();
+                            $1.sym = pTemp->type;
                          }
                          else {
                             cout << "***ERROR: " << value
                             << " is not a function" << endl;
-                            $$.type = "bad";
-                            $$.str = "bad";
-                            $$.sym = new Symbol;
+                            //$1.type = "bad";
+                            $1.str = "bad";
+                            $1.sym = new Symbol;
                          }
                       }
                       ActualParameters {
                          ProcFunc *pTemp = dynamic_cast<ProcFunc*>(table.lookUp($1.type));
-                         free($1.type);
+                         //free($1.type);
                          
                          tNode *tTemp = static_cast<tNode*>($3.list);
                          
                          for(int i = pTemp->params.size() - 1; i >= 0; i--, tTemp = tTemp->next) {
+                            if(tTemp == NULL) {
+                               cout << "***ERROR: invalid number of params";
+                               break;
+                            }
+                         
                             if(pTemp->params[i]->type->name != tTemp->sym->name) {
                                cout << "***ERROR: invalid parameter";
                             }
                          }
+                         
+                         $$.str = $1.str;
+                         $$.sym = $1.sym;
+                         
+                         if(!strcmp($1.str, "bad")) {
+							$$.type = "bad";
+						 }
+						 else {
+						    $$.type = "var";
+						 }
                          
                          cout << ")";
                       }
