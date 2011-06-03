@@ -78,7 +78,6 @@ void addScope(bool func) {
 	temp->name = scopeName;
 	temp->type = NULL;
 	table.enterScope(temp);
-	gLevel++;
 
 	// If the scope belongs to a functtion get its type.
 	if(func == true) {

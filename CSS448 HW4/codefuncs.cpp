@@ -21,6 +21,24 @@ extern list<Type*> typeList;
 
 extern int gLevel;
 
+void getArrayInfo(int &numDim, Symbol *&type, ArrayType *rhs) {
+	numDim = 0;
+	type = NULL;
+	ArrayType *arr = rhs;
+	for(;;) {
+		numDim += arr->numDim;
+
+		ArrayType *aTemp = dynamic_cast<ArrayType*>(arr->type);
+		if(aTemp != NULL) {
+			arr = aTemp;
+		}
+		else {
+			type = arr->type;
+			break;
+		}
+	}
+}
+
 bool cmpPtrs(PComp rhs1, PComp rhs2) {
 	if(!rhs1.isPointer || !rhs2.isPointer) {
 		return false;
@@ -218,7 +236,7 @@ void outputTypes(int level) {
 // if the parameter Symbol is of type bool, int, double, or char.
 void outputConst(Symbol *rhs, int level) {
 	// Output the number of tabs in the scope level.
-	for(int i = 0; i < level; i++) {
+	for(int i = 0; i < gLevel; i++) {
 		cout << "   ";
 	}
 
@@ -265,7 +283,7 @@ void outputConst(Symbol *rhs, int level) {
 // a single/standard variable with a type.
 void outputVar(Variable *rhs, int level) {
 	// Output the number of tabs in the scope level.
-	for(int i = 0; i < level; i++) {
+	for(int i = 0; i < gLevel; i++) {
 		cout << "   ";
 	}
 

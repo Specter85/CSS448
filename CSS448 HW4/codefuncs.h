@@ -16,6 +16,8 @@ struct PComp {
 	string type;
 };
 
+void getArrayInfo(int &numDim, Symbol *&type, ArrayType *rhs);
+
 bool cmpPtrs(PComp rhs1, PComp rhs2);
 
 // Function for determining if a nonterminal is a pointer.

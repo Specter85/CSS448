@@ -55,7 +55,7 @@ int yylex() {
 		}
 		// If we see a newline display it then skip it.
 		else if(current == '\n') {
-			cout << endl;
+			//cout << endl;
 			continue;
 		}
 		// See if the next token is a keyword or identifier.
@@ -256,7 +256,7 @@ int yylex() {
 
 							if(temp == '*' && cin.peek() == ')') {
 								cin.get();
-								cout << "*/";
+								cout << "*/" << endl;
 								break;
 							}
 							else {
@@ -284,7 +284,7 @@ int yylex() {
 						}
 
 						if(temp == '}') {
-							cout << "*/";
+							cout << "*/" << endl;
 							break;
 						}
 						else {

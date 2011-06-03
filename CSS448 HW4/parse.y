@@ -113,21 +113,22 @@ IdentList          :  yident { identStack.push(value); }
 
 /**************************  Declarations section ***************************/
 
-ProgBlock          :  Declarations  ybegin { cout << "int main() {" << endl; }
-					  StatementSequence /*{
+ProgBlock          :  Declarations  ybegin { cout << "int main() {" << endl;
 					     cout << endl;
+					     gLevel++;
 					     for(int i = 0; i < gLevel; i++) {
 						    cout << "   ";
 						 }
-					  }*/ yend { cout << endl << "}"; }
+					  }
+					  StatementSequence  yend { gLevel--; cout << endl << "}"; }
                    ;
-Block              :  Declarations  ybegin 
-					  StatementSequence /*{
+Block              :  Declarations  ybegin {
 					     cout << endl;
 					     for(int i = 0; i < gLevel; i++) {
 						    cout << "   ";
 						 }
-					  }*/ yend
+					  }
+					  StatementSequence  yend
                    ;
 Declarations       :  ConstantDefBlock              /* you do this one */
                       TypeDefBlock
@@ -376,12 +377,12 @@ FieldList          :  IdentList  ycolon  Type { addRecordVars(); }
 
 StatementSequence  :  Statement
                    |  StatementSequence  
-                      ysemicolon  /*{
+                      ysemicolon  {
 					     cout << endl;
 					     for(int i = 0; i < gLevel; i++) {
 						    cout << "   ";
 						 }
-					  }*/
+					  }
                       Statement
                    ;
 Statement          :  Assignment { cout << ";"; }
@@ -464,11 +465,37 @@ IfStatement        :  yif { cout << "if("; }
 					     }
 					     cout << ") ";
 					  } 
-					  ythen { cout << " {"; } Statement { cout << endl << "}"; } ElsePart
+					  ythen { cout << " {" << endl; 
+					     gLevel++;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  } 
+					  Statement { 
+						 cout << endl; 
+						 gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+						 cout << "}"; 
+					  } ElsePart
                    ;
 ElsePart           :  /*** empty ***/
                    |  yelse { cout << "else "; } IfStatement
-                   |  yelse { cout << "else {";} ElseStatement { cout << endl << "}"; }
+                   |  yelse { cout << "else {" << endl;
+					     gLevel++;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  }
+                      ElseStatement { 
+						 cout << endl; 
+						 gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+						 cout << "}"; 
+					  }
                    ;
 ElseStatement      :  Assignment { cout << ";"; }
                    |  ProcedureCall { cout << ";"; }
@@ -579,14 +606,36 @@ WhileStatement     :  ywhile { cout << "while("; }
 					        cout << "***ERROR: while statments can only be controled by "
 					        << "bool values" << endl;
 					     }
-					     cout << ") {";
+					     cout << ") {" << endl;
+					     gLevel++;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
 					  }  
 					  ydo  
-					  Statement { cout << endl << "}"; }
+					  Statement { 
+					     cout << endl;
+					     gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					     cout << "}";
+					  }
                    ;
-RepeatStatement    :  yrepeat { cout << "do {"; } 
+RepeatStatement    :  yrepeat { cout << "do {" << endl; 
+					     gLevel++;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					  }
 					  StatementSequence 
-					  yuntil { cout << endl << "} while(!("; }
+					  yuntil { cout << endl;
+					     gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+					     cout << "} while(!("; 
+					  }
 					  Expression {
 					     if(strcmp($6.type, "bool")) {
 					        cout << "***ERROR: while statments can only be controled by "
@@ -624,18 +673,29 @@ ForStatement       :  yfor  yident { forControl.assign(value);
 					  Expression {
 					     if(!strcmp($10.str, "integer")) {
 					        if($8 == 1) {
-					           cout << "; " << forControl << "++) {";
+					           cout << "; " << forControl << "++) {" << endl;
 					        }
 					        else {
-					           cout << "; " << forControl << "--) {";
+					           cout << "; " << forControl << "--) {" << endl;
 					        }
+					        
+					        gLevel++;
+					        for(int i = 0; i < gLevel; i++) {
+						       cout << "   ";
+						    }
 					     }
 					     else {
 					        cout << "***ERROR: for statments can only be controled by ints";
 					     }
 					  }
                       ydo 
-                      Statement { cout << endl << "}"; }
+                      Statement { cout << endl;
+                         gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+						    cout << "   ";
+						 }
+                         cout << "}"; 
+                      }
                    ;
 WhichWay           :  yto { $$ = 1; } |  ydownto { $$ = 0; }
                    ;
@@ -698,12 +758,15 @@ Designator         :  yident {
 					        }
 					        ArrayType *arr = dynamic_cast<ArrayType*>(var->type);
 					        if(arr != NULL) {
-								if(arr->numDim != $3.num) {
+					            Symbol *type = NULL;
+					            int numDim = 0;
+					            getArrayInfo(numDim, type, arr);
+								if(numDim != $3.num) {
 								   cout << "***ERROR: Incorrect number of dimensions" << endl;
 								}
 								$$.type = "var";
-								$$.str = arr->type->name.c_str();
-								$$.sym = arr->type;
+								$$.str = type->name.c_str();
+								$$.sym = type;
 								symbolName.assign("");
 							}
 					     }
@@ -792,14 +855,14 @@ DesignatorStuff    :  /*** empty ***/ {
                    |  DesignatorStuff theDesignatorStuff {
 					     if(!strcmp($2.type, "arrayindex")) {
 							if($1.type != NULL) {
-								if(!strcmp($1.type, "array")) {
+								/*if(!strcmp($1.type, "array")) {
 								   $$.type = "array"; $$.num = $$.num + 1;
 								}
-								else if(!strcmp($1.type, "empty")) {
-								   $$.type = "array"; $$.num = 1;
+								else */if(!strcmp($1.type, "empty")) {
+								   $$.type = "array"; $$.num = $2.num;
 								}
 								else if(!strcmp($1.type, "element")) {
-								   $$.type = "array"; $$.num = 1;
+								   $$.type = "array"; $$.num = $2.num;
 								   $$.sym = $1.sym;
 								}
 							}
@@ -850,7 +913,9 @@ DesignatorStuff    :  /*** empty ***/ {
                    ;
 theDesignatorStuff :  ydot yident { 
 					  $$.type = "element"; $$.str = value.c_str(); }
-                   |  yleftbracket { cout << "["; } 
+                   |  yleftbracket { cout << "["; 
+                      $1.type = strdup(lSeperator.c_str());
+                      lSeperator = "]["; } 
                       ExpList yrightbracket {
                       if(!strcmp($3.type, "string") && $3.type[1] != '\0') {
                          cout << "***ERROR: arrays cannot be indexed bys strings" << endl;
@@ -864,7 +929,11 @@ theDesignatorStuff :  ydot yident {
                          cout << "***ERROR: arrays can only be indexed by chars and ints" << endl;
                       }
                       cout << "]"; 
-                      $$.type = "arrayindex"; }
+                      $$.type = "arrayindex";
+                      $$.num = $3.num;
+                      lSeperator.assign($1.type);
+                      free($1.type);
+                      }
                    |  ycaret { cout << "->"; $$.type = "pointer"; }
                    ;
 ActualParameters   :  yleftparen { lSeperator = ", "; } ExpList  yrightparen { $$.list = $3.list; }
@@ -877,6 +946,7 @@ ExpList            :  Expression {
 					     $$.type = $1.type;
 					     $$.sym = $1.sym;
 					     $$.list = temp;
+					     $$.num = 1;
 					  }
                    |  ExpList  ycomma { cout << lSeperator; } Expression {
                          tNode *temp = new tNode;
@@ -887,6 +957,7 @@ ExpList            :  Expression {
                          $$.type = $1.type;
                          $$.sym = $1.sym;
                          $$.list = temp;
+                         $$.num += 1;
                       }     
                    ;
 MemoryStatement    :  ynew  yleftparen  yident { 
@@ -894,9 +965,6 @@ MemoryStatement    :  ynew  yleftparen  yident {
 					  if(var != NULL) {
 					     PointerType *type = dynamic_cast<PointerType*>(var->type);
 					     if(type != NULL) {
-					        for(int i = 0; i < gLevel; i++) {
-							   cout << "   ";
-							}
 					        cout << var->name << " = new " << getFinalTypeName(type->typeTo);
 					     }
 					  } 
@@ -907,9 +975,6 @@ MemoryStatement    :  ynew  yleftparen  yident {
 					  if(var != NULL) {
 					     PointerType *type = dynamic_cast<PointerType*>(var->type);
 					     if(type != NULL) {
-					        for(int i = 0; i < gLevel; i++) {
-							   cout << "   ";
-							}
 					        cout << "delete " << var->name;
 					     }
 					  } 
@@ -1135,24 +1200,28 @@ SubprogDeclList    :  /*** empty ***/
                    |  SubprogDeclList ProcedureDecl ysemicolon  
                    |  SubprogDeclList FunctionDecl ysemicolon
                    ;
-ProcedureDecl      :  ProcedureHeading  { addScope(); } ysemicolon 
+ProcedureDecl      :  ProcedureHeading  { addScope(); gLevel++; } ysemicolon 
 					  Block { 
 					  table.exitScope();
-					  for(int i = 0; i < table.getScopeLevel(); i++) {
+					  gLevel--;
+					  for(int i = 0; i < gLevel; i++) {
 					     cout << "   ";
 					  }
-					  gLevel--;
 					  cout << "}" << endl; }
                    ;
-FunctionDecl       :  FunctionHeading  ycolon  yident { addScope(true); } 
+FunctionDecl       :  FunctionHeading  ycolon  yident { addScope(true); gLevel++; } 
 					  ysemicolon  Block { 
 					     for(int i = 0; i < gLevel; i++) {
 					        cout << "   ";
 					     }
 					     Symbol *temp = table.lookUpCS(table.getScopeName());
 					     cout << "return ret_" << temp->name << ";" << endl;
-					     cout << "}";
-					     table.exitScope(); gLevel--; 
+					     cout << "}" << endl;
+					     gLevel--;
+					     for(int i = 0; i < gLevel; i++) {
+					        cout << "   ";
+					     }
+					     table.exitScope(); 
 					  }
                    ;
 ProcedureHeading   :  yprocedure  yident { scopeName.assign(value); } 
