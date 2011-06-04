@@ -404,6 +404,9 @@ string getFinalTypeName(Type *rhs) {
 		else if(sType->name == "boolean") {
 			return "bool";
 		}
+		else if(sType->name == "char") {
+			return "char";
+		}
 	}
 	// Otherwise simply return the name of rhs.
 	else {

@@ -411,7 +411,10 @@ Assignment         :  Designator yassign { cout << " = "; }
 					     }
 					     else if($4.sym != NULL) {
 					        Symbol *temp2 = static_cast<Symbol*>($4.sym);
-					        if(temp1->name != temp2->name) {
+					        if((temp1->name == "integer" || temp1->name == "char") &&
+					        (temp2->name == "integer" || temp2->name == "char")) {
+					        }
+					        else if(temp1->name != temp2->name) {
 							   cout << "***ERROR: type mismatch" << endl;
 							}
 					     }
@@ -651,14 +654,21 @@ ForStatement       :  yfor  yident { forControl.assign(value);
 					  yassign { cout << " = "; }
 					  Expression {
 					     Variable *temp = dynamic_cast<Variable*>(table.lookUp(forControl));
+					     Symbol *assg = static_cast<Symbol*>($6.sym);
 					     if(temp == NULL) {
 					        cout << "***ERROR: " <<
 					        symbolName << " does not exist";
 					     }
-					     else {
-							 if(temp->type->name != "integer" || strcmp($6.str, "integer")) {
-								cout << "***ERROR: for statments can only be controled by ints";
-							 }
+					     else if(temp->type->name != "integer" && temp->type->name != "char") {
+						    cout << "***ERROR: for statments can only be controled by ints and chars";
+					     }
+					     else if(!strcmp($6.type, "var") && assg->name != "integer" && 
+					     assg->name != "char") {
+					        cout << "***ERROR: for statments can only be controled by ints and chars";
+					     }
+						 else if(strcmp($6.str, "integer") != 0 && strcmp($6.type, "string") != 0 &&
+						 $6.str[1] != '\0') {
+						    cout << "***ERROR: for statments can only be controled by ints and chars";
 						 }
 						 
 						 cout << ";";
@@ -672,7 +682,16 @@ ForStatement       :  yfor  yident { forControl.assign(value);
 					     }
 					  }
 					  Expression {
-					     if(!strcmp($10.str, "integer")) {
+						 Symbol *assg = static_cast<Symbol*>($10.sym);
+					     if(!strcmp($10.type, "var") && assg->name != "integer" && 
+					     assg->name != "char") {
+					        cout << "***ERROR: for statments can only be controled by ints and chars";
+					     }
+						 else if(strcmp($10.str, "integer") != 0 && strcmp($10.type, "string") != 0 &&
+						 $10.str[1] != '\0') {
+						    cout << "***ERROR: for statments can only be controled by ints and chars";
+						 }
+					     else {
 					        if($8 == 1) {
 					           cout << "; " << forControl << "++) {" << endl;
 					        }
@@ -684,9 +703,6 @@ ForStatement       :  yfor  yident { forControl.assign(value);
 					        for(int i = 0; i < gLevel; i++) {
 						       cout << "   ";
 						    }
-					     }
-					     else {
-					        cout << "***ERROR: for statments can only be controled by ints";
 					     }
 					  }
                       ydo 
@@ -921,13 +937,8 @@ theDesignatorStuff :  ydot yident {
                       if(!strcmp($3.type, "string") && $3.type[1] != '\0') {
                          cout << "***ERROR: arrays cannot be indexed bys strings" << endl;
                       }
-                      else if(strcmp($3.type, "number") || strcmp($3.type, "char")) {
-                         if($3.str != NULL && strcmp($3.str, "integer")) {
-						    cout << "***ERROR: arrays cannot be indexed by reals" << endl;
-						 }
-                      }
-                      else {
-                         cout << "***ERROR: arrays can only be indexed by chars and ints" << endl;
+                      else if(strcmp($3.str, "integer") && strcmp($3.str, "char")) {
+						 cout << "***ERROR: arrays can only be indexed by chars and ints" << endl;
                       }
                       cout << "]"; 
                       $$.type = "arrayindex";
@@ -1092,18 +1103,26 @@ Factor             :  ynumber {
                          Symbol *temp = getFalse();
                          cout << "false";
                          $$.type = "bool";
+                         $$.str = "bool";
                          $$.sym = temp;
                       }
                    |  ynil {
                          Symbol *temp = getNil();
                          cout << "NULL";
                          $$.type = "pointer";
+                         $$.str = "pointer";
                          $$.sym = temp;
                       }
                    |  ystring {
                          Symbol *temp = getString();
-                         cout << "\"" << value << "\"";
+                         if(value.length() == 1) {
+                            cout << "'" << value << "'";
+                         }
+                         else {
+                            cout << "\"" << value << "\"";
+                         }
                          $$.type = "string";
+                         $$.str = strdup(value.c_str());
                          $$.sym = temp;
                       }
                    |  Designator { 
