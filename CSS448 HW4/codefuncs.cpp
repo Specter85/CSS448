@@ -251,10 +251,10 @@ void outputConst(Symbol *rhs, int level) {
 	if(bTemp != NULL) {
 		cout << "const bool " << bTemp->name << " = ";
 		if(bTemp->value) {
-			cout << "true;";
+			cout << "true;" << endl;
 		}
 		else {
-			cout << "false;";
+			cout << "false;" << endl;
 		}
 		return;
 	}
@@ -262,21 +262,21 @@ void outputConst(Symbol *rhs, int level) {
 	// If the Symbol is of type integer output a C++ int defintion for it.
 	Constant<int> *iTemp = dynamic_cast<Constant<int>*>(rhs);
 	if(iTemp != NULL) {
-		cout << "const int " << iTemp->name << " = " << iTemp->value << ";";
+		cout << "const int " << iTemp->name << " = " << iTemp->value << ";" << endl;
 		return;
 	}
 
 	// If the Symbol is of type real output a C++ double defintion for it.
 	Constant<double> *dTemp = dynamic_cast<Constant<double>*>(rhs);
 	if(dTemp != NULL) {
-		cout << "const double " << dTemp->name << " = " << dTemp->value << ";";
+		cout << "const double " << dTemp->name << " = " << dTemp->value << ";" << endl;
 		return;
 	}
 
 	// If the Symbol is of type string output a C++ c-string defintion for it.
 	Constant<string> *sTemp = dynamic_cast<Constant<string>*>(rhs);
 	if(sTemp != NULL) {
-		cout << "const char " << sTemp->name << "[] = \"" << sTemp->value << "\";";
+		cout << "const char " << sTemp->name << "[] = \"" << sTemp->value << "\";" << endl;
 		return;
 	}
 }
@@ -289,7 +289,7 @@ void outputConst(Symbol *rhs, int level) {
 // a single/standard variable with a type.
 void outputVar(Variable *rhs, int level) {
 	// Output the number of tabs in the scope level.
-	for(int i = 0; i < gLevel; i++) {
+	for(int i = 0; i < level; i++) {
 		cout << "   ";
 	}
 
@@ -344,11 +344,17 @@ void outputArrayRanges(ArrayType *rhs) {
 		i != rhs->dimRanges.end(); i++) {
 			// Make sure the start and end of the range are of the same type if not
 			// output an error.
-			if(typeid(*i) != typeid(*i)) {
+			if(typeid(*(i->start)) != typeid(*(i->end))) {
 				cout << 
 					"***ERROR: the start and end of an array range must be the same type"
 					<< endl;
 				return;
+			}
+
+			Constant<int> *iTemp1 = dynamic_cast<Constant<int>*>(i->start);
+			Constant<int> *iTemp2 = dynamic_cast<Constant<int>*>(i->end);
+			if(iTemp1 != NULL && iTemp2 != NULL && iTemp1->value > iTemp2->value) {
+				cout << "***ERROR: the start of a range must be smaller than the end" << endl;
 			}
 
 			// If the current range is defined by a real output an error since this
@@ -372,6 +378,12 @@ void outputArrayRanges(ArrayType *rhs) {
 					return;
 				}
 			}
+
+			Constant<string> *sTemp2 = dynamic_cast<Constant<string>*>(i->start);
+			if(sTemp != NULL && sTemp2 != NULL && sTemp2->value[0] > sTemp->value[0]) {
+				cout << "***ERROR: the start of a range must be smaller than the end" << endl;
+			}
+
 
 			// Otherwise just output the array range.
 			cout << "[";

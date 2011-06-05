@@ -144,7 +144,7 @@ ConstantDefList    :  ConstantDef ysemicolon
                    ;
 TypeDefBlock       :  /*** empty ***/
                    |  ytype  TypeDefList { processUmfPointers(); 
-                      outputTypes(table.getScopeLevel()); }
+                      outputTypes(gLevel); }
                    ;
 TypeDefList        :  TypeDef  ysemicolon
                    |  TypeDefList TypeDef ysemicolon  
@@ -759,6 +759,7 @@ Designator         :  yident {
 					     }
 					     else {
 							Symbol *temp = new Symbol;
+							$1.sym = temp;
 							currentBase = temp;
 					        cout << "***ERROR: " << value << " is not a variable" << endl;
 					     }
@@ -855,7 +856,7 @@ Designator         :  yident {
 							if(temp == NULL) {
 							   $$.type = "bad";
 							   $$.str = "bad";
-							   $$.sym = NULL;
+							   $$.sym = $1.sym;
 							}
 					     }
 					     else {
